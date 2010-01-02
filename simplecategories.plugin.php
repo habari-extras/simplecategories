@@ -4,7 +4,6 @@ class SimpleCategories extends Plugin
 {
 	private static $vocabulary = 'simplecategories';
 	private static $content_type = 'entry';
-	private static $select_none = 'none';
 
 	/**
 	 * Add the category vocabulary
@@ -42,23 +41,15 @@ class SimpleCategories extends Plugin
 
 			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text');
 			$form->categories->class = 'check-change';
+			$form->categories->tabindex = $form->tags->tabindex + 1;
 			$form->move_after( $form->categories, $form->tags );
+			$form->save->tabindex = $form->save->tabindex + 1;
 
 			// If this is an existing post, see if it has categories already
 			if ( 0 != $post->id ) {
 				$form->categories->value = implode( ', ', array_values( $this->get_categories( $post ) ) );
 			}
 
-			/* I think this if statement is leftovers from subpages */
-/*
-			if ( 0 != $post->id ) {
-				$page_term = $categories_vocab->get_term( $post->slug );
-				if ( FALSE !== $page_term ) {
-					$parent_term = $page_term->parent();
-					$descendants = $page_term->descendants();
-				}
-			}
-*/
 		}
 	}
 
