@@ -22,10 +22,6 @@ class SimpleCategories extends Plugin
 			$simple_categories = new Vocabulary( $params );
 			$simple_categories->insert();
 
-/* shouldn't need this anymore
-			$test_term = $simple_categories->add_term( 'cat' );
- 			$test_term->associate( 'post', 4 );
-*/
 		}
 	}
 
@@ -54,7 +50,7 @@ class SimpleCategories extends Plugin
 			}
 
 			/* I think this if statement is leftovers from subpages */
-
+/*
 			if ( 0 != $post->id ) {
 				$page_term = $categories_vocab->get_term( $post->slug );
 				if ( FALSE !== $page_term ) {
@@ -62,7 +58,7 @@ class SimpleCategories extends Plugin
 					$descendants = $page_term->descendants();
 				}
 			}
-
+*/
 		}
 	}
 
@@ -75,46 +71,6 @@ class SimpleCategories extends Plugin
 		}
 	}
 
-/*	public function action_publish_post( $post, $form )
-	{
-		if ( $post->content_type == Post::type( self::$content_type ) ) {
-			$categories_vocab = Vocabulary::get( self::$vocabulary );
-			$categories = Vocabulary::get( self::$vocabulary );
-
-			// go through the categories in the input, add ones not already there, delete the ones not there anymore
-//             $this->tags = $this->parsetags( $this->fields['tags'] );
-
-
-
-			$page_term = $subpage_vocab->get_term( $post->slug );
-
-			if ( null != $page_term ) {
-				$parent_term = $page_term->parent();
-			}
-
-			$form_parent = $form->settings->parent->value;
-
-			// If the parent has been changed, delete this page from its children
-			if ( null != $parent_term && $form_parent != $parent_term->term ) {
-				$subpage_vocab->delete_term( $page_term->term );
-			}
-
-			// If a new term has been set, add it to the subpages vocabulary
-			if ( self::$select_none != $form_parent ) {
-				// Make sure the parent term exists.
-				$parent_term = $subpage_vocab->get_term( $form_parent );
-
-				if ( null == $parent_term ) {
-					// There's no term for the parent, add it as a top-level term
-					$parent_term = $subpage_vocab->add_term( $form_parent );
-				}
-
-				$page_term = $subpage_vocab->add_term( $post->slug, $parent_term );
-			}
-
-		}
-	}
-*/
 	/**
 	 * Enable update notices to be sent using the Habari beacon
 	 **/
@@ -165,8 +121,6 @@ class SimpleCategories extends Plugin
 				'action' => 'display_category', 
 				'priority' => 5, 
 				'description' => 'Return posts matching specified category.', 
-// not so sure about this last line
-				'parameters' => serialize( array( 'require_match' => array('Category', 'rewrite_category_exists') ) ) 
 		);
 
 		$rules[] = $rule;	
@@ -175,6 +129,7 @@ class SimpleCategories extends Plugin
 
 	/**
 	 * Helper function: Display the posts for a category. Probably should be more generic eventually.
+	 * Does not appear to work currently.
 	 */
 	public function filter_theme_act_display_entries_by_category( $handled, $theme ) {
 		$paramarray['fallback'] = array(
@@ -204,7 +159,6 @@ class SimpleCategories extends Plugin
 	{
 		$categories = array();
 		$result = Vocabulary::get( self::$vocabulary )->get_object_terms( 'post', $post->id );
-Utils::debug( $result );
 		if( $result ) {
 			foreach( $result as $t ) {
 				$categories[$t->term] = $t->term_display;
@@ -230,7 +184,8 @@ Utils::debug( $result );
 
 }
 
-class SimpleCategoryFormat extends Format {
+class SimpleCategoriesFormat extends Format {
+
 	/**
 	 * function category_and_list
 	 * Formatting function (should be in Format class?)
@@ -257,8 +212,6 @@ class SimpleCategoryFormat extends Format {
 		$out .= ($out == '') ? $last : $between_last . $last;
 		return $out;
 	}
-
-
 }
 
 ?>
