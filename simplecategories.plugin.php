@@ -46,22 +46,20 @@ class SimpleCategories extends Plugin
 			$descendants = null;
 			$categories_vocab = Vocabulary::get( self::$vocabulary );
 
-			$categories = $form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text');
-			$categories->value = $categories;
+			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text');
+//			$categories->value = $categories;
 			$form->move_after( $form->categories, $form->tags );
 
 			// If this is an existing post, see if it has categories already
-			if ( null != $post->id ) {
-				$categories = 
-$categories_vocab->get_object_terms( 'post', $post->id );
+			if ( 0 != $post->id ) {
+				$categories = $categories_vocab->get_object_terms( 'post', $post->id );
 Utils::debug( $categories );
-var_dump( $catgories_vocab );
 Utils::debug( $categories_vocab );
 			}
 
-			if ( null != $post->id ) {
+			if ( 0 != $post->id ) {
 				$page_term = $categories_vocab->get_term( $post->slug );
-				if ( null != $page_term ) {
+				if ( FALSE !== $page_term ) {
 					$parent_term = $page_term->parent();
 					$descendants = $page_term->descendants();
 				}
