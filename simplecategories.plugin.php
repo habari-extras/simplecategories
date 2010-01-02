@@ -22,10 +22,10 @@ class SimpleCategories extends Plugin
 			$simple_categories = new Vocabulary( $params );
 			$simple_categories->insert();
 
-
+/* shouldn't need this anymore
 			$test_term = $simple_categories->add_term( 'cat' );
  			$test_term->associate( 'post', 4 );
-
+*/
 		}
 	}
 
@@ -69,6 +69,15 @@ class SimpleCategories extends Plugin
 	public function action_publish_post( $post, $form )
 	{
 		if ( $post->content_type == Post::type( self::$content_type ) ) {
+			$categories = array();
+			$categories = $this->parse_categories( $form->categories->value );
+			Vocabulary::get( self::$vocabulary )->set_object_terms( 'post', $post->id, $categories );
+		}
+	}
+
+/*	public function action_publish_post( $post, $form )
+	{
+		if ( $post->content_type == Post::type( self::$content_type ) ) {
 			$categories_vocab = Vocabulary::get( self::$vocabulary );
 			$categories = Vocabulary::get( self::$vocabulary );
 
@@ -76,7 +85,7 @@ class SimpleCategories extends Plugin
 //             $this->tags = $this->parsetags( $this->fields['tags'] );
 
 
-/*
+
 			$page_term = $subpage_vocab->get_term( $post->slug );
 
 			if ( null != $page_term ) {
@@ -103,9 +112,9 @@ class SimpleCategories extends Plugin
 				$page_term = $subpage_vocab->add_term( $post->slug, $parent_term );
 			}
 
-*/		}
+		}
 	}
-
+*/
 	/**
 	 * Enable update notices to be sent using the Habari beacon
 	 **/
@@ -197,7 +206,7 @@ class SimpleCategories extends Plugin
 			preg_match_all( '/((("|((?<= )|^)\')\\S([^\\3]*?)\\3((?=[\\W])|$))|[^,])+/', $catstr, $matches );
 			// cleanup
 			$categories = array_map( 'trim', $matches[0] );
-			$categories = preg_replace( array_fill( 0, count( $tags ), '/^(["\'])(((?!").)+)(\\1)$/'), '$2', $categories );
+			$categories = preg_replace( array_fill( 0, count( $categories ), '/^(["\'])(((?!").)+)(\\1)$/'), '$2', $categories );
 			// unescape
 			$categories = str_replace( array_keys( $zer ), $zer, $categories );
 			// just as hooray as it is in post.php
@@ -264,24 +273,21 @@ Utils::debug( $result );
 		return $categories;
 	}
 
-/*	private static function subpage_stub( $term )
+	public function filter_post_get( $out, $name, $post )
 	{
-		if ( is_string($term) ) {
-			$term = Vocabulary::get( self::$vocabulary )->get_term($term);
+		if( $name != 'categories' ) {
+			return $out;
 		}
-		if ( null == $term ) {
-			return false;
+		$categories = array();
+		$result = Vocabulary::get( self::$vocabulary )->get_object_terms( 'post', $post->id );
+		if( $result ) {
+			foreach( $result as $t ) {
+				$categories[$t->term] = $t->term_display;
+			}
 		}
-		$ancestors = $term->ancestors();
+		return $categories;
+	}
 
-		$stub_parts = array();
-		foreach ( $ancestors as $ancestor ) {
-			$stub_parts[] = $ancestor->term;
-		}
-		$stub_parts[] = $term->term;
-
-		return implode('/', $stub_parts);
-	} */
 }
 
 ?>
