@@ -50,10 +50,7 @@ class SimpleCategories extends Plugin
 
 			// If this is an existing post, see if it has categories already
 			if ( 0 != $post->id ) {
-				$form->categories->value = implode( ', ', $this->get_categories() ); 
-// 				$categories = $categories_vocab->get_object_terms( 'post', $post->id );
-Utils::debug( $categories );
-Utils::debug( $categories_vocab );
+				$form->categories->value = implode( ', ', array_values( $this->get_categories( $post ) ) );
 			}
 
 			/* I think this if statement is leftovers from subpages */
@@ -251,26 +248,21 @@ Utils::debug( $categories_vocab );
 	/**
 	 * function get_categories
 	 * Gets the categories for the post
-	 * @return &array A reference to the categories array for this post
+	 * @return array The categories array for this post
 	 */
-	private function get_categories()
+	
+	private function get_categories( $post )
 	{
-		if ( empty( $this->categories ) ) {
-Utils::debug( $this->fields );
-			$result = Vocabulary::get( self::$vocabulary )->get_object_terms( 'post', $this->fields[ 'id' ] );
+		$categories = array();
+		$result = Vocabulary::get( self::$vocabulary )->get_object_terms( 'post', $post->id );
 Utils::debug( $result );
-			if ( $result ) {
-				foreach ( $result as $t ) {
-					$this->categories[$t->term] = $t->term_display;
-				}
+		if( $result ) {
+			foreach( $result as $t ) {
+				$categories[$t->term] = $t->term_display;
 			}
 		}
-		if ( count( $this->categories ) == 0 ) {
-			return array();
-		}
-		return $this->categories;
+		return $categories;
 	}
-
 
 /*	private static function subpage_stub( $term )
 	{
