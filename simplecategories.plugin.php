@@ -2,7 +2,7 @@
 
 class SimpleCategories extends Plugin
 {
-	private static $vocabulary = 'simplecategories';
+	private static $vocabulary = 'categories';
 	private static $content_type = 'entry';
 
 	/**
@@ -109,7 +109,7 @@ class SimpleCategories extends Plugin
 				'parse_regex' => '%^category/(?P<category>[^/]*)(?:/page/(?P<page>\d+))?/?$%i', 
 				'build_str' => 'category/{$category}(/page/{$page})', 
 				'handler' => 'UserThemeHandler', 
-				'action' => 'display_category', 
+				'action' => 'display_entries_by_category', 
 				'priority' => 5, 
 				'description' => 'Return posts matching specified category.', 
 		);
