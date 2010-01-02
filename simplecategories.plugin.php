@@ -6,8 +6,6 @@ class SimpleCategories extends Plugin
 	private static $content_type = 'entry';
 	private static $select_none = 'none';
 
-	private $cache_rootPages = null;
-
 	/**
 	 * Add the category vocabulary
 	 *
@@ -25,8 +23,8 @@ class SimpleCategories extends Plugin
 			$simple_categories->insert();
 
 
-			$test_term = $simple_categories->add_term( 'dog' );
- 			$test_term->associate( 'post', 232 );
+			$test_term = $simple_categories->add_term( 'cat' );
+ 			$test_term->associate( 'post', 4 );
 
 		}
 	}
@@ -47,15 +45,18 @@ class SimpleCategories extends Plugin
 			$categories_vocab = Vocabulary::get( self::$vocabulary );
 
 			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text');
-//			$categories->value = $categories;
+			$form->categories->class = 'check-change';
 			$form->move_after( $form->categories, $form->tags );
 
 			// If this is an existing post, see if it has categories already
 			if ( 0 != $post->id ) {
-				$categories = $categories_vocab->get_object_terms( 'post', $post->id );
+				$form->categories->value = implode( ', ', $this->get_categories() ); 
+// 				$categories = $categories_vocab->get_object_terms( 'post', $post->id );
 Utils::debug( $categories );
 Utils::debug( $categories_vocab );
 			}
+
+			/* I think this if statement is leftovers from subpages */
 
 			if ( 0 != $post->id ) {
 				$page_term = $categories_vocab->get_term( $post->slug );
@@ -246,6 +247,30 @@ Utils::debug( $categories_vocab );
 		$theme->act_display( $paramarray );
 		return true;
 	}
+
+	/**
+	 * function get_categories
+	 * Gets the categories for the post
+	 * @return &array A reference to the categories array for this post
+	 */
+	private function get_categories()
+	{
+		if ( empty( $this->categories ) ) {
+Utils::debug( $this->fields );
+			$result = Vocabulary::get( self::$vocabulary )->get_object_terms( 'post', $this->fields[ 'id' ] );
+Utils::debug( $result );
+			if ( $result ) {
+				foreach ( $result as $t ) {
+					$this->categories[$t->term] = $t->term_display;
+				}
+			}
+		}
+		if ( count( $this->categories ) == 0 ) {
+			return array();
+		}
+		return $this->categories;
+	}
+
 
 /*	private static function subpage_stub( $term )
 	{
