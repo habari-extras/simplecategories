@@ -123,70 +123,6 @@ class SimpleCategories extends Plugin
 		Update::add( 'SimpleCategories', '379220dc-b464-4ea6-92aa-9086a521db2c',  $this->info->version );
 	}
 
-	/**
-	 * Change the page rewrite rule to validate ancestors
-	 * @param Array $rules Current rewrite rules
-	 **/
-	public function filter_rewrite_rules( $rules )
-	{
-		foreach ( $rules as $rule ) {
-			if ( 'display_page' == $rule->name ) {
-				$rule->parse_regex = '%^(?P<parentage>.*/)(?P<slug>[^/]+)(?:/page/(?P<page>\d+))?/?$%i';
-				$rule->description = 'Return page matching specified slug and page hierarchy';
-				$rule->parameters = serialize( array( 'require_match' => array('SubPagesPlugin', 'rewrite_match_subpage') ) );
-				break;
-			}
-		}
-
-		return $rules;
-	}
-
-	/**
-	 * Validate ancestors for this page
-	 * @param RewriteRule $rule The matched rewrite rule
-	 * @param string The URL stub requested
-	 * @param array $params Some stuff
-	 **/
-	public static function rewrite_match_subpage( $rule, $stub, $params )
-	{
-		// TODO Is there any way to get these apart from rematching ?
-		// They're not set until there's a handler, and that isn't set yet.
-		$slugs = explode('/', $stub);
-
-		$args = array(
-			'content_type' => 'page'
-		);
-
-		// Check we can get a page for each part of the slug hierarchy
-		$args['slug'] = $slugs;
-
-		$posts = Posts::get($args);
-
-		if ( count($posts) != count($slugs) ) {
-			return false;
-		}
-
-		// Check the stub matches the expected stub
-		return $stub == self::subpage_stub( array_pop( $slugs ) );
-	}
-
-	/**
-	 * Rewrite a post's permalink if it's a subpage
-	 * @param Array $rules Current rewrite rules
-	 **/
-	public function filter_post_permalink( $permalink, $post )
-	{
-		if ( $post->content_type == Post::type( self::$content_type ) ) {
-			$subpage_vocab = Vocabulary::get( self::$vocabulary );
-			$page_term = $subpage_vocab->get_term( $post->slug );
-			if ( null != $page_term ) {
-				$permalink = Site::get_url( 'habari' ) . '/' . self::subpage_stub( $page_term );
-			}
-		}
-
-		return $permalink;
-	}
-
 	/** 
 	 * return an array of categories, having been cleaned up a bit. Taken from post.php r3907
 	 * @param String $categories Text from the Category text input
@@ -217,6 +153,10 @@ class SimpleCategories extends Plugin
 		}
 	}
 
+	/**
+	 * Add a category rewrite rule
+	 * @param Array $rules Current rewrite rules
+	 **/
 	public function filter_default_rewrite_rules( $rules ) {
 		$rule = array( 	'name' => 'display_entries_by_category', 
 				'parse_regex' => '%^category/(?P<category>[^/]*)(?:/page/(?P<page>\d+))?/?$%i', 
@@ -287,6 +227,37 @@ Utils::debug( $result );
 		}
 		return $categories;
 	}
+
+}
+
+class SimpleCategoryFormat extends Format {
+	/**
+	 * function category_and_list
+	 * Formatting function (should be in Format class?)
+	 * Turns an array of category names into an HTML-linked list with commas and an "and".
+	 * @param array $array An array of category names
+	 * @param string $between Text to put between each element
+	 * @param string $between_last Text to put between the next to last element and the last element
+	 * @return string HTML links with specified separators.
+	 **/
+	public static function category_and_list( $array, $between = ', ', $between_last = NULL )
+	{
+		if ( ! is_array( $array ) ) {
+			$array = array ( $array );
+		}
+
+		if ( $between_last === NULL ) {
+			$between_last = _t(' and ');
+		}
+
+		$fn = create_function('$a,$b', 'return "<a href=\\"" . URL::get("display_entries_by_category", array( "category" => $b) ) . "\\" rel=\\"category\\">" . $a . "</a>";');
+		$array = array_map($fn, $array, array_keys($array));
+		$last = array_pop($array);
+		$out = implode($between, $array);
+		$out .= ($out == '') ? $last : $between_last . $last;
+		return $out;
+	}
+
 
 }
 
