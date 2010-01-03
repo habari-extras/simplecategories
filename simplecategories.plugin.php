@@ -32,6 +32,9 @@ class SimpleCategories extends Plugin
 
 	}
 
+	/**
+	 * Add categories to the publish form
+	 **/
 	public function action_form_publish ( $form, $post )
 	{
 		if ( $form->content_type->value == Post::type( self::$content_type ) ) {
@@ -53,6 +56,10 @@ class SimpleCategories extends Plugin
 		}
 	}
 
+	/**
+	 * Process categories when the form is received
+	 *
+	 **/
 	public function action_publish_post( $post, $form )
 	{
 		if ( $post->content_type == Post::type( self::$content_type ) ) {
@@ -67,7 +74,7 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_update_check()
 	{
-		Update::add( 'SimpleCategories', '379220dc-b464-4ea6-92aa-9086a521db2c',  $this->info->version );
+		Update::add( 'SimpleCategories', '379220dc-b464-4ea6-92aa-9086a521db2c',$this->info->version );
 	}
 
 	/** 
@@ -106,8 +113,8 @@ class SimpleCategories extends Plugin
 	 **/
 	public function filter_default_rewrite_rules( $rules ) {
 		$rule = array( 	'name' => 'display_entries_by_category', 
-				'parse_regex' => '%^category/(?P<category>[^/]*)(?:/page/(?P<page>\d+))?/?$%i', 
-				'build_str' => 'category/{$category}(/page/{$page})', 
+				'parse_regex' => '%^category/(?P<category_slug>[^/]*)(?:/page/(?P<page>\d+))?/?$%i', 
+				'build_str' => 'category/{$category_slug}(/page/{$page})', 
 				'handler' => 'UserThemeHandler', 
 				'action' => 'display_entries_by_category', 
 				'priority' => 5, 
@@ -119,6 +126,20 @@ class SimpleCategories extends Plugin
 	}
 
 	/**
+	 * function filter_template_where_filters
+	 * Limit the Posts::get call to categories 
+	 * (uses tag_slug because that's really term under the hood)
+	 **/
+	public function filter_template_where_filters( $filters ) {
+		$vars = Controller::get_handler_vars();
+		if( isset( $vars['category'] ) ) {
+			$filters['tag_slug'] = $vars['category'];
+		}
+		return $filters;
+	}
+
+	/**
+	 * function filter_theme_act_display_entries_by_category
 	 * Helper function: Display the posts for a category. Probably should be more generic eventually.
 	 * Does not appear to work currently.
 	 */
@@ -129,9 +150,9 @@ class SimpleCategories extends Plugin
 			'multiple',
 		);
 
-		// Makes sure home displays only entries
+		// Makes sure home displays only entries ... maybe not necessary. Probably not, in fact.
 		$default_filters = array(
-			'content_type' => Post::type( 'entry' ),
+ 			'content_type' => Post::type( 'entry' ),
 		);
 
 		$paramarray[ 'user_filters' ] = $default_filters;
@@ -145,7 +166,6 @@ class SimpleCategories extends Plugin
 	 * Gets the categories for the post
 	 * @return array The categories array for this post
 	 */
-	
 	private function get_categories( $post )
 	{
 		$categories = array();
@@ -158,6 +178,11 @@ class SimpleCategories extends Plugin
 		return $categories;
 	}
 
+	/**
+	 * function filter_post_get
+	 * Allow post->categories
+	 * @return array The categories array for this post
+	 **/
 	public function filter_post_get( $out, $name, $post )
 	{
 		if( $name != 'categories' ) {
