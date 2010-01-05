@@ -114,7 +114,6 @@ class SimpleCategories extends Plugin
 		if ( $form->content_type->value == Post::type( self::$content_type ) ) {
 			$parent_term = null;
 			$descendants = null;
-			$categories_vocab = Vocabulary::get( self::$vocabulary );
 
 			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text');
 			$form->categories->class = 'check-change';
