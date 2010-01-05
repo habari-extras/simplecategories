@@ -6,7 +6,7 @@ class SimpleCategories extends Plugin
 	private static $content_type = 'entry';
 
 	/**
-	 * Add the category vocabulary
+	 * Add the category vocabulary and create the admin token
 	 *
 	 **/
 	public function action_plugin_activation($file)
@@ -21,15 +21,89 @@ class SimpleCategories extends Plugin
 			$simple_categories = new Vocabulary( $params );
 			$simple_categories->insert();
 
+			// create default access token
+			ACL::create_token( 'manage_categories', _t('Manage categories'), 'Administration', false );
+			$group = UserGroup::get_by_name( 'admin' );
+			$group->grant( 'manage_categories' );
 		}
 	}
 
 	/**
+	 * Remove the admin token
 	 *
+	 **/
+	public function action_plugin_deactivation($file)
+	{
+		if ( Plugins::id_from_file($file) == Plugins::id_from_file(__FILE__) ) {
+			// delete default access token
+			ACL::destroy_token( 'manage_categories' );
+		}
+	}
+
+
+
+	/**
+	 * Register admin template
 	 **/
 	public function action_init()
 	{
+		$this->add_template( 'categories', dirname($this->get_file()) . '/categories_admin.php' );
+	}
 
+	/**
+	 * Check token to restrict access to the page
+	 **/
+	public function filter_admin_access_tokens( array $require_any, $page )
+	{
+		switch ($page) {
+			case 'categories':
+				$require_any = array( 'manage_categories' => true );
+				break;
+		}
+		return $require_any;
+	}
+
+	/**
+	 * Display the page
+	 **/
+	public function action_admin_theme_get_categories( AdminHandler $handler, Theme $theme )
+	{
+		$theme->display( 'categories' );
+ 
+		// End everything
+		exit;
+	}
+
+	/**
+	 * Cover both post and get requests for the page
+	 **/
+	public function alias()
+	{
+		return array(
+			'action_admin_theme_post_categories' => 'action_admin_theme_get_categories'
+		);
+	}
+	
+	/**
+	 * Add menu item above 'dashboard'
+	 **/
+	public function filter_adminhandler_post_loadplugins_main_menu( array $menu )
+	{
+		$item_menu = array( 'categories' => array(
+			'url' => URL::get( 'admin', 'page=categories'),
+			'title' => _t('Manage blog categories'),
+			'text' => _t('Categories'),
+			'hotkey' => 'W',
+			'selected' => false
+		) );
+		
+		$slice_point = array_search( 'dashboard', array_keys( $menu ) ); // Element will be inserted before "groups"
+		$pre_slice = array_slice( $menu, 0, $slice_point);
+		$post_slice = array_slice( $menu, $slice_point);
+		
+		$menu = array_merge( $pre_slice, $item_menu, $post_slice );
+		
+		return $menu;
 	}
 
 	/**
