@@ -15,7 +15,7 @@ class SimpleCategories extends Plugin
 			$params = array(
 				'name' => self::$vocabulary,
 				'description' => 'A vocabulary for describing Categories',
-				'features' => array( 'multiple', 'free' )
+				'features' => array( 'multiple', 'hierarchical' )
 			);
 
 			$simple_categories = new Vocabulary( $params );
@@ -39,8 +39,6 @@ class SimpleCategories extends Plugin
 			ACL::destroy_token( 'manage_categories' );
 		}
 	}
-
-
 
 	/**
 	 * Register admin template
@@ -125,7 +123,6 @@ class SimpleCategories extends Plugin
 			if ( 0 != $post->id ) {
 				$form->categories->value = implode( ', ', array_values( $this->get_categories( $post ) ) );
 			}
-
 		}
 	}
 
@@ -295,13 +292,17 @@ class SimpleCategoriesFormat extends Format {
 			$between_last = _t(' and ');
 		}
 
-		$fn = create_function('$a,$b', 'return "<a href=\\"" . URL::get("display_entries_by_category", array( "category" => $b) ) . "\\" rel=\\"category\\">" . $a . "</a>";');
-		$array = array_map($fn, $array, array_keys($array));
+		$array = array_map('SimpleCategoriesFormat::link_cat', $array, array_keys($array));
 		$last = array_pop($array);
 		$out = implode($between, $array);
 		$out .= ($out == '') ? $last : $between_last . $last;
 		return $out;
 	}
+
+	public static function link_cat( $a, $b ) {
+		return '<a href="' . URL::get("display_entries_by_category", array( "category_slug" => $b) ) . "\" rel=\"category\">$a</a>";
+	}
+
 }
 
 ?>
