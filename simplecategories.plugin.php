@@ -154,7 +154,7 @@ class SimpleCategories extends Plugin
 	 * return an array of categories, having been cleaned up a bit. Taken from post.php r3907
 	 * @param String $categories Text from the Category text input
 	 */
-	private static function parse_categories( $categories )
+	public static function parse_categories( $categories )
 	{
 		if ( is_string( $categories ) ) {
 			if ( '' === $categories ) {
@@ -205,8 +205,8 @@ class SimpleCategories extends Plugin
 	 **/
 	public function filter_template_where_filters( $filters ) {
 		$vars = Controller::get_handler_vars();
-		if( isset( $vars['category'] ) ) {
-			$filters['tag_slug'] = $vars['category'];
+		if( isset( $vars['category_slug'] ) ) {
+			$filters['tag_slug'] = $vars['category_slug'];
 		}
 		return $filters;
 	}
@@ -217,6 +217,7 @@ class SimpleCategories extends Plugin
 	 * Does not appear to work currently.
 	 */
 	public function filter_theme_act_display_entries_by_category( $handled, $theme ) {
+		$paramarray = array();
 		$paramarray['fallback'] = array(
 			'category.{$category}',
 			'category',
