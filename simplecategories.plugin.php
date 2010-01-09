@@ -81,7 +81,7 @@ class SimpleCategories extends Plugin
 			while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
 				array_pop($right);
 			}
-			$parent->options[ $term->id ] = str_repeat('--', count($right) ) . $term->term_display;
+			$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
 			$right[] = $term->mptt_right;
 		}
 		$action = $form->append( 'hidden', 'action', 'create' );
