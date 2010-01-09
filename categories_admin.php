@@ -20,7 +20,7 @@
 				array_pop($right);
 			}
 			$pad = count($right)*5;
-			$rest = 100 - $pad - 5;
+			$rest = 100 - $pad;
 			echo "<div><span class='pct{$pad}'>&nbsp;</span><span class='pct{$rest} last'>{$category->term}</span></div>";
 			$right[] = $category->mptt_right;
 		}
