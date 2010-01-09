@@ -76,8 +76,13 @@ class SimpleCategories extends Plugin
 		$parent = $form->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ) );
 		$parent->options = array();
 		$parent->options[ '' ] = ''; // top should be blank
-		foreach( $all_terms as $term ) { 
-			$parent->options[ $term->id ] = $term->term_display;
+		$right = array();
+		foreach( $all_terms as $term ) {
+			while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
+				array_pop($right);
+			}
+			$parent->options[ $term->id ] = str_repeat('--', count($right) ) . $term->term_display;
+			$right[] = $term->mptt_right;
 		}
 		$action = $form->append( 'hidden', 'action', 'create' );
 		$form->append( 'submit', 'save', _t('Create', 'simplecategories') );
