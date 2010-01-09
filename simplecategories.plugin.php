@@ -67,7 +67,7 @@ class SimpleCategories extends Plugin
 	public function action_admin_theme_get_categories( AdminHandler $handler, Theme $theme )
 	{
 		$all_terms = array();
-		$all_terms = SimpleCategories::get_terms();
+		$all_terms = Vocabulary::get(self::$vocabulary)->get_tree();
 
 		$form = new FormUI( 'category-new' );
 		$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
