@@ -66,19 +66,73 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_admin_theme_get_categories( AdminHandler $handler, Theme $theme )
 	{
+		$all_terms = array();
+		$all_terms = SimpleCategories::get_terms();
+
+		$form = new FormUI( 'category-new' );
+		$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
+
+		$new_term = $form->append( 'text', 'new_term', 'null:null', _t( 'Create a new Category', 'simplecategories' ), 'formcontrol_text' );
+		$parent = $form->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ) );
+		$parent->options = array();
+		$parent->options[ '' ] = ''; // top should be blank
+		foreach( $all_terms as $term ) { 
+			$parent->options[ $term->id ] = $term->term_display;
+		}
+		$action = $form->append( 'hidden', 'action', 'create' );
+		$form->append( 'submit', 'save', _t('Create', 'simplecategories') );
+		$form->on_success( array($this, 'formui_submit') );
+		$theme->form = $form->get();
+
 		$theme->display( 'categories' );
  
 		// End everything
 		exit;
 	}
+	public function formui_submit( FormUI $form )
+	{
+		// probably should have some sort of action switch.
+
+		if( isset($form->new_term) ) {
+
+		// time to create the new term.
+		$form_parent = $form->parent->value;
+		$new_term = $form->new_term->value;
+
+			// If a new term has been set, add it to the categories vocabulary
+			if ( '' != $form_parent ) {
+				// Make sure the parent term exists.
+				$parent_term = Vocabulary::get( self::$vocabulary )->get_term( $form_parent );
+
+				if ( null == $parent_term ) {
+					// There's no term for the parent, add it as a top-level term
+					$parent_term = Vocabulary::get( self::$vocabulary )->add_term( $form_parent );
+				}
+
+				$category_term = Vocabulary::get( self::$vocabulary )->add_term( $new_term, $parent_term );
+			}
+
+		}
+	}
+
+	/**
+	 * TEMPORARY FUNCTION, SHOULD BE IMPLEMENTED BETTER IN VOCABULARY
+	 * Retrieve the terms of the vocabulary 
+	 * @return Array The Term objects in the vocabulary, in aplhabetical order
+	 **/
+	private function get_terms($orderby = 'term_display')
+	{
+		return DB::get_results( "SELECT * FROM {terms} WHERE vocabulary_id=2 ORDER BY $orderby", array(), 'Term' );
+	}
+
 
 	/**
 	 * Cover both post and get requests for the page
 	 **/
 	public function alias()
 	{
-		return array(
-			'action_admin_theme_post_categories' => 'action_admin_theme_get_categories'
+		return array( 
+			'action_admin_theme_get_categories'=> 'action_admin_theme_post_categories' 
 		);
 	}
 	
@@ -127,7 +181,7 @@ class SimpleCategories extends Plugin
 	}
 
 	/**
-	 * Process categories when the form is received
+	 * Process categories when the publish form is received
 	 *
 	 **/
 	public function action_publish_post( $post, $form )
