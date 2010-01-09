@@ -1,8 +1,8 @@
 <?php $theme->display('header');?>
- 
-<?php 
+
+<?php
 	$all_categories = array();
-	$all_categories = Vocabulary::get( 'categories' )->get_tree( 'term_display' );
+	$all_categories = Vocabulary::get( 'categories' )->get_tree();
 // 	Utils::debug( $all_categories );
 ?>
 	<div class="container">
@@ -13,18 +13,22 @@
 
 	<div class="container">
 <?php
-	if ( count( $all_categories) > 0 ) { ?>
-<table><tr><th>ID</th><th>term</th><th>term_display</th></tr>
-<?php 		foreach ( $all_categories as $category ) {
-			echo "<tr><td><b>{$category->id}</b></td><td>{$category->term}</td><td>{$category->term_display}</td></tr>";
+	if ( count( $all_categories) > 0 ) {
+		$right = array();
+		foreach ( $all_categories as $category ) {
+			while ( count($right) > 0 && $right[count($right) - 1] < $category->mptt_right ) {
+				array_pop($right);
+			}
+			$pad = count($right)*5;
+			$rest = 100 - $pad - 5;
+			echo "<div><span class='pct{$pad}'>&nbsp;</span><span class='pct{$rest} last'>{$category->term}</span></div>";
+			$right[] = $category->mptt_right;
 		}
-?></table><?php
 	}
 	else {
 		_e( "<h2>No categories have been created yet</h2>" );
 	}
 
-
 ?></div>
- 
+
 <?php $theme->display('footer'); ?>
