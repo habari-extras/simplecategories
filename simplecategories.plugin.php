@@ -122,7 +122,14 @@ class SimpleCategories extends Plugin
 	 **/
 	private function get_terms($orderby = 'term_display')
 	{
-		return DB::get_results( "SELECT * FROM {terms} WHERE vocabulary_id=2 ORDER BY $orderby", array(), 'Term' );
+		return DB::get_results(
+			"SELECT * FROM {terms} WHERE vocabulary_id = :vocabulary_id ORDER BY :orderby",
+			array(
+				'orderby' => $orderby,
+				'vocabulary_id' => Vocabulary::get(self::$vocabulary)->id
+			),
+			'Term'
+		);
 	}
 
 
