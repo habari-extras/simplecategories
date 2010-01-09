@@ -95,9 +95,9 @@ class SimpleCategories extends Plugin
 
 		if( isset($form->new_term) ) {
 
-		// time to create the new term.
-		$form_parent = $form->parent->value;
-		$new_term = $form->new_term->value;
+			// time to create the new term.
+			$form_parent = $form->parent->value;
+			$new_term = $form->new_term->value;
 
 			// If a new term has been set, add it to the categories vocabulary
 			if ( '' != $form_parent ) {
@@ -110,6 +110,9 @@ class SimpleCategories extends Plugin
 				}
 
 				$category_term = Vocabulary::get( self::$vocabulary )->add_term( $new_term, $parent_term );
+			}
+			else {
+				$category_term = Vocabulary::get( self::$vocabulary )->add_term( $new_term );
 			}
 
 		}
