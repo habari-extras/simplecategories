@@ -11,7 +11,7 @@
 
 	</div>
 
-	<div class="container">
+	<div class="container plugins activeplugins">
 <?php
 	if ( count( $all_categories) > 0 ) {
 		$right = array();
@@ -19,9 +19,10 @@
 			while ( count($right) > 0 && $right[count($right) - 1] < $category->mptt_right ) {
 				array_pop($right);
 			}
-			$pad = count($right)*5;
-			$rest = 100 - $pad;
-			echo "<div><span class='pct{$pad}'>&nbsp;</span><span class='pct{$rest} last'>{$category->term}</span></div>";
+			$pad = count($right)*5 + 2;
+			$rest = 98 - $pad;
+			$dropbutton = '<ul class="dropbutton"><li><a href="">' . _t( "Edit" ) . '</a></li><li><a href="">' . _t( "Delete" ) . '</a></li></ul>';
+			echo "\n<div class='item plugin clear'><div class='head'><span class='pct{$pad}'>&nbsp;</span>\n<span class='pct{$rest} last'><a href=''>{$category->term}</a> $dropbutton</span>\n</div></div>";
 			$right[] = $category->mptt_right;
 		}
 	}

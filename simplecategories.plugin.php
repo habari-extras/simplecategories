@@ -73,7 +73,9 @@ class SimpleCategories extends Plugin
 		$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
 
 		$new_term = $form->append( 'text', 'new_term', 'null:null', _t( 'Create a new Category', 'simplecategories' ), 'formcontrol_text' );
+		$new_term->class = 'pct50';
 		$parent = $form->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ) );
+		$parent->class = 'pct40';
 		$parent->options = array();
 		$parent->options[ '' ] = ''; // top should be blank
 		$right = array();
