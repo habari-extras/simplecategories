@@ -21,7 +21,7 @@
 			}
 			$pad = count($right)*5 + 5;
 			$rest = 95 - $pad;
-			$titlelink = '<a href="' . URL::get( 'admin', 'page=posts' ) . "?search=category:{$category->term}\" title=\"" . 
+			$titlelink = '<a href="' . URL::get( 'admin', array( 'page' => 'posts', 'search' => "category:{$category->term}" ) ). '" title="' . 
 					_t( "Manage content categorized '{$category->term_display}'" ) . "\">{$category->term_display}</a>";
 			$dropbutton = '<ul class="dropbutton"><li><a href="" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' . 
 					_t( "Edit" ) . '</a></li><li><a href="" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';

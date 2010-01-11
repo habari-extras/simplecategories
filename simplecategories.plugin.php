@@ -72,9 +72,10 @@ class SimpleCategories extends Plugin
 		$form = new FormUI( 'category-new' );
 		$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
 
-		$new_term = $form->append( 'text', 'new_term', 'null:null', _t( 'Create a new Category', 'simplecategories' ), 'formcontrol_text' );
-		$new_term->class = 'pct50';
-		$parent = $form->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ) );
+		$create_fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category' ) );
+		$new_term = $create_fieldset->append( 'text', 'new_term', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
+		$new_term->class = 'pct30';
+		$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ) );
 		$parent->class = 'pct40';
 		$parent->options = array();
 		$parent->options[ '' ] = ''; // top should be blank
@@ -87,7 +88,7 @@ class SimpleCategories extends Plugin
 			$right[] = $term->mptt_right;
 		}
 		$action = $form->append( 'hidden', 'action', 'create' );
-		$form->append( 'submit', 'save', _t('Create', 'simplecategories') );
+		$create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
 		$form->on_success( array($this, 'formui_submit') );
 		$theme->form = $form->get();
 
