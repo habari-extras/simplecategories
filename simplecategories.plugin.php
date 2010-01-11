@@ -74,6 +74,8 @@ class SimpleCategories extends Plugin
 
 		$create_fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category' ) );
 		$new_term = $create_fieldset->append( 'text', 'new_term', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
+		$new_term->add_validator( 'validate_required' );
+
 		$new_term->class = 'pct30';
 		$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ) );
 		$parent->class = 'pct40';
@@ -90,6 +92,7 @@ class SimpleCategories extends Plugin
 		$action = $form->append( 'hidden', 'action', 'create' );
 		$create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
 		$form->on_success( array($this, 'formui_submit') );
+
 		$theme->form = $form->get();
 
 		$theme->display( 'categories' );
@@ -101,11 +104,12 @@ class SimpleCategories extends Plugin
 	{
 		// probably should have some sort of action switch.
 
-		if( isset($form->new_term) ) {
+		if( isset($form->new_term) && ( $form->new_term->value <> '' ) ) {
 
 			// time to create the new term.
 			$form_parent = $form->parent->value;
 			$new_term = $form->new_term->value;
+
 
 			// If a new term has been set, add it to the categories vocabulary
 			if ( '' != $form_parent ) {
