@@ -19,10 +19,13 @@
 			while ( count($right) > 0 && $right[count($right) - 1] < $category->mptt_right ) {
 				array_pop($right);
 			}
-			$pad = count($right)*5 + 2;
-			$rest = 98 - $pad;
-			$dropbutton = '<ul class="dropbutton"><li><a href="">' . _t( "Edit" ) . '</a></li><li><a href="">' . _t( "Delete" ) . '</a></li></ul>';
-			echo "\n<div class='item plugin clear'><div class='head'><span class='pct{$pad}'>&nbsp;</span>\n<span class='pct{$rest} last'><a href=''>{$category->term}</a> $dropbutton</span>\n</div></div>";
+			$pad = count($right)*5 + 5;
+			$rest = 95 - $pad;
+			$titlelink = '<a href="' . URL::get( 'admin', 'page=posts' ) . "?search=category:{$category->term}\" title=\"" . 
+					_t( "Manage content categorized '{$category->term_display}'" ) . "\">{$category->term_display}</a>";
+			$dropbutton = '<ul class="dropbutton"><li><a href="" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' . 
+					_t( "Edit" ) . '</a></li><li><a href="" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';
+			echo "\n<div class='item plugin clear'><div class='head'><span class='pct{$pad}'>&nbsp;</span>\n<span class='pct{$rest} last'>$titlelink $dropbutton</span>\n</div></div>";
 			$right[] = $category->mptt_right;
 		}
 	}
