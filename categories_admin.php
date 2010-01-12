@@ -1,6 +1,8 @@
 <?php $theme->display('header');?>
 
 <?php
+
+// 	Utils::debug( $_GET );
 	$all_categories = array();
 	$all_categories = Vocabulary::get( 'categories' )->get_tree();
 // 	Utils::debug( $all_categories );
@@ -23,8 +25,8 @@
 			$rest = 95 - $pad;
 			$titlelink = '<a href="' . URL::get( 'admin', array( 'page' => 'posts', 'search' => "category:{$category->term}" ) ). '" title="' . 
 					_t( "Manage content categorized '{$category->term_display}'" ) . "\">{$category->term_display}</a>";
-			$dropbutton = '<ul class="dropbutton"><li><a href="" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' . 
-					_t( "Edit" ) . '</a></li><li><a href="" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';
+			$dropbutton = '<ul class="dropbutton"><li><a href="'. URL::get( 'admin', array( 'page' => 'categories', 'action' => 'edit', 'category' => $category->term )  ) . '" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' . 
+					_t( "Edit" ) . '</a></li><li><a href="' . URL::get( 'admin', array( 'page' => 'categories', 'action' => 'delete', 'category' => $category->term ) ) . '" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';
 			echo "\n<div class='item plugin clear'><div class='head'><span class='pct{$pad}'>&nbsp;</span>\n<span class='pct{$rest} last'>$titlelink $dropbutton</span>\n</div></div>";
 			$right[] = $category->mptt_right;
 		}

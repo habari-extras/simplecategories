@@ -77,8 +77,8 @@ class SimpleCategories extends Plugin
 		$new_term->add_validator( 'validate_required' );
 
 		$new_term->class = 'pct30';
-		$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ) );
-		$parent->class = 'pct40';
+		$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), 'asdasdaoptionscontrol_select' );
+		$parent->class = 'pct50';
 		$parent->options = array();
 		$parent->options[ '' ] = ''; // top should be blank
 		$right = array();
@@ -90,7 +90,9 @@ class SimpleCategories extends Plugin
 			$right[] = $term->mptt_right;
 		}
 		$action = $form->append( 'hidden', 'action', 'create' );
-		$create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
+		$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
+		$save_button->class = 'pct20 last';
+
 		$form->on_success( array($this, 'formui_submit') );
 
 		$theme->form = $form->get();
@@ -100,6 +102,7 @@ class SimpleCategories extends Plugin
 		// End everything
 		exit;
 	}
+
 	public function formui_submit( FormUI $form )
 	{
 		// probably should have some sort of action switch.
