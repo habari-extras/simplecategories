@@ -166,6 +166,11 @@ class SimpleCategories extends Plugin
 	 **/
 	public function filter_adminhandler_post_loadplugins_main_menu( array $menu )
 	{
+		// Should I really need to do this? I can see it when I shouldn't be able to :(
+		if ( !User::identify()->can( 'manage_categories' ) ) {
+			return $menu;
+		}
+
 		$item_menu = array( 'categories' => array(
 			'url' => URL::get( 'admin', 'page=categories'),
 			'title' => _t('Manage blog categories'),

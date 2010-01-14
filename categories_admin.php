@@ -2,7 +2,11 @@
 
 <?php
 
-// 	Utils::debug( $_GET );
+	if (isset( $_GET['action'] ) and User::identify()->can( 'manage_categories' ) ) {
+	
+		// ok, token checked, but is it overkill?
+		Utils::debug( $_GET );
+	}	
 	$all_categories = array();
 	$all_categories = Vocabulary::get( 'categories' )->get_tree();
 // 	Utils::debug( $all_categories );
