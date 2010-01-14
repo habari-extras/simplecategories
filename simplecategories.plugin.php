@@ -166,17 +166,13 @@ class SimpleCategories extends Plugin
 	 **/
 	public function filter_adminhandler_post_loadplugins_main_menu( array $menu )
 	{
-		// Should I really need to do this? I can see it when I shouldn't be able to :(
-		if ( !User::identify()->can( 'manage_categories' ) ) {
-			return $menu;
-		}
-
 		$item_menu = array( 'categories' => array(
 			'url' => URL::get( 'admin', 'page=categories'),
 			'title' => _t('Manage blog categories'),
 			'text' => _t('Categories'),
 			'hotkey' => 'W',
-			'selected' => false
+			'selected' => false,
+			'access' => array( 'manage_categories' => true )
 		) );
 		
 		$slice_point = array_search( 'dashboard', array_keys( $menu ) ); // Element will be inserted before "groups"
@@ -287,7 +283,11 @@ class SimpleCategories extends Plugin
 	public function filter_template_where_filters( $filters ) {
 		$vars = Controller::get_handler_vars();
 		if( isset( $vars['category_slug'] ) ) {
-			$filters['tag_slug'] = $vars['category_slug'];
+// 			$filters['tag_slug'] = $vars['category_slug'];
+			$terms = (array) Term::get(Vocabulary::get(self::$vocabulary), $vars['category_slug'])->descendants();
+			$terms = array_map(create_function('$a', 'return $a->term;'), $terms);
+			$terms = array_push($terms, $vars['category_slug']);
+			$filters['tag_slug'] = $terms;
 		}
 		return $filters;
 	}
@@ -352,7 +352,6 @@ class SimpleCategories extends Plugin
 		}
 		return $categories;
 	}
-
 }
 
 class SimpleCategoriesFormat extends Format {
