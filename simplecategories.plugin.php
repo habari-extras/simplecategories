@@ -144,6 +144,11 @@ class SimpleCategories extends Plugin
 			}
 
 		}
+		else if( isset( $form->edit_term) && ( $form->edit_term->value <> '' ) ) {
+
+			// existing term, we need to edit it
+die( "<h1>Editing that term</h1>" );
+		}
 	}
 
 	/**
@@ -375,8 +380,9 @@ class SimpleCategories extends Plugin
 	 **/
 	public static function delete_category( $category = '' )
 	{
+		$vocabulary = Vocabulary::get(self::$vocabulary);
 		// should there be a Plugins::act( 'category_delete_before' ...?
-		$term = $this->vocabulary->get_term( $category );
+		$term = $vocabulary->get_term( $category );
 		$result = $vocabulary->delete_term( $term);
 
 		if ( $result ) {
