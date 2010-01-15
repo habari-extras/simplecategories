@@ -3,9 +3,18 @@
 <?php
 
 	if (isset( $_GET['action'] ) and User::identify()->can( 'manage_categories' ) ) {
-	
+		switch( $_GET[ 'action' ] ) {
+			case "delete":
+die( "<h1>Delete</h1>" );
+				break;
+			case "edit":
+die( "<h1>Edit</h1>" );
+				break;
+			default:
+				// shouldn't come to this.
+		}
 		// ok, token checked, but is it overkill?
-		Utils::debug( $_GET );
+// 		Utils::debug( $_GET );
 	}	
 	$all_categories = array();
 	$all_categories = Vocabulary::get( 'categories' )->get_tree();
