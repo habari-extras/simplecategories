@@ -5,6 +5,19 @@ class SimpleCategories extends Plugin
 	private static $vocabulary = 'categories';
 	private static $content_type = 'entry';
 
+	protected $_vocabulary;
+
+
+	public function  __get($name)
+	{
+		switch ( $name ) {
+			case 'vocabulary':
+				if ( !isset($this->_vocabulary) ) {
+					$this->_vocabulary = Vocabulary::get(self::$vocabulary);
+				}
+				return $this->_vocabulary;
+		}
+	}
 	/**
 	 * Add the category vocabulary and create the admin token
 	 *
@@ -67,7 +80,7 @@ class SimpleCategories extends Plugin
 	public function action_admin_theme_get_categories( AdminHandler $handler, Theme $theme )
 	{
 		$all_terms = array();
-		$all_terms = Vocabulary::get(self::$vocabulary)->get_tree();
+		$all_terms = $this->vocabulary->get_tree();
 
 		$form = new FormUI( 'category-new' );
 		$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
@@ -117,17 +130,17 @@ class SimpleCategories extends Plugin
 			// If a new term has been set, add it to the categories vocabulary
 			if ( '' != $form_parent ) {
 				// Make sure the parent term exists.
-				$parent_term = Vocabulary::get( self::$vocabulary )->get_term( $form_parent );
+				$parent_term = $this->vocabulary->get_term( $form_parent );
 
 				if ( null == $parent_term ) {
 					// There's no term for the parent, add it as a top-level term
-					$parent_term = Vocabulary::get( self::$vocabulary )->add_term( $form_parent );
+					$parent_term = $this->vocabulary->add_term( $form_parent );
 				}
 
-				$category_term = Vocabulary::get( self::$vocabulary )->add_term( $new_term, $parent_term );
+				$category_term = $this->vocabulary->add_term( $new_term, $parent_term );
 			}
 			else {
-				$category_term = Vocabulary::get( self::$vocabulary )->add_term( $new_term );
+				$category_term = $this->vocabulary->add_term( $new_term );
 			}
 
 		}
@@ -144,7 +157,7 @@ class SimpleCategories extends Plugin
 			"SELECT * FROM {terms} WHERE vocabulary_id = :vocabulary_id ORDER BY :orderby",
 			array(
 				'orderby' => $orderby,
-				'vocabulary_id' => Vocabulary::get(self::$vocabulary)->id
+				'vocabulary_id' => $this->vocabulary->id
 			),
 			'Term'
 		);
@@ -215,7 +228,7 @@ class SimpleCategories extends Plugin
 		if ( $post->content_type == Post::type( self::$content_type ) ) {
 			$categories = array();
 			$categories = $this->parse_categories( $form->categories->value );
-			Vocabulary::get( self::$vocabulary )->set_object_terms( 'post', $post->id, $categories );
+			$this->vocabulary->set_object_terms( 'post', $post->id, $categories );
 		}
 	}
 
@@ -284,7 +297,7 @@ class SimpleCategories extends Plugin
 		$vars = Controller::get_handler_vars();
 		if( isset( $vars['category_slug'] ) ) {
 // 			$filters['tag_slug'] = $vars['category_slug'];
-			$term = Term::get(Vocabulary::get(self::$vocabulary), $vars['category_slug']);
+			$term = Term::get($this->vocabulary, $vars['category_slug']);
 			if ( $term instanceof Term ) {
 				$terms = (array) $term->descendants();
 				$terms = array_map(create_function('$a', 'return $a->term;'), $terms);
@@ -327,7 +340,7 @@ class SimpleCategories extends Plugin
 	private function get_categories( $post )
 	{
 		$categories = array();
-		$result = Vocabulary::get( self::$vocabulary )->get_object_terms( 'post', $post->id );
+		$result = $this->vocabulary->get_object_terms( 'post', $post->id );
 		if( $result ) {
 			foreach( $result as $t ) {
 				$categories[$t->term] = $t->term_display;
@@ -347,7 +360,7 @@ class SimpleCategories extends Plugin
 			return $out;
 		}
 		$categories = array();
-		$result = Vocabulary::get( self::$vocabulary )->get_object_terms( 'post', $post->id );
+		$result = $this->vocabulary->get_object_terms( 'post', $post->id );
 		if( $result ) {
 			foreach( $result as $t ) {
 				$categories[$t->term] = $t->term_display;
