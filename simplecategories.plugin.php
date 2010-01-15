@@ -284,10 +284,13 @@ class SimpleCategories extends Plugin
 		$vars = Controller::get_handler_vars();
 		if( isset( $vars['category_slug'] ) ) {
 // 			$filters['tag_slug'] = $vars['category_slug'];
-			$terms = (array) Term::get(Vocabulary::get(self::$vocabulary), $vars['category_slug'])->descendants();
-			$terms = array_map(create_function('$a', 'return $a->term;'), $terms);
-			$terms = array_push($terms, $vars['category_slug']);
-			$filters['tag_slug'] = $terms;
+			$term = Term::get(Vocabulary::get(self::$vocabulary), $vars['category_slug']);
+			if ( $term instanceof Term ) {
+				$terms = (array) $term->descendants();
+				$terms = array_map(create_function('$a', 'return $a->term;'), $terms);
+				$terms = array_push($terms, $vars['category_slug']);
+				$filters['tag_slug'] = $terms;
+			}
 		}
 		return $filters;
 	}
