@@ -8,7 +8,7 @@
 				SimpleCategories::delete_category( $_GET[ 'category' ] );
 				break;
 			case "edit":
-die( "<h1>Edit</h1>" );
+				// actually, probably don't need to even do this.
 				break;
 			default:
 				// shouldn't come to this.
@@ -28,6 +28,8 @@ die( "<h1>Edit</h1>" );
 
 	<div class="container plugins activeplugins">
 <?php
+	// this should be in the plugin, not on this page.
+
 	if ( count( $all_categories) > 0 ) {
 		$right = array();
 		foreach ( $all_categories as $category ) {

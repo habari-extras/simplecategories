@@ -79,53 +79,77 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_admin_theme_get_categories( AdminHandler $handler, Theme $theme )
 	{
+
 		$all_terms = array();
 		$all_terms = $this->vocabulary->get_tree();
 
-		$form = new FormUI( 'category-new' );
-		$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
+		if (!isset( $_GET[ 'category']) ) { // create new category form
 
-		$create_fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category' ) );
-		$new_term = $create_fieldset->append( 'text', 'new_term', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
-		$new_term->add_validator( 'validate_required' );
+			$form = new FormUI( 'category-new' );
+			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
 
-		$new_term->class = 'pct30';
-		$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), 'asdasdaoptionscontrol_select' );
-		$parent->class = 'pct50';
-		$parent->options = array();
-		$parent->options[ '' ] = ''; // top should be blank
-		$right = array();
-		foreach( $all_terms as $term ) {
-			while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
-				array_pop($right);
+			$create_fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category', 'simplecategories' ) );
+			$new_term = $create_fieldset->append( 'text', 'new_term', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
+			$new_term->add_validator( 'validate_required' );
+
+			$new_term->class = 'pct30';
+			$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), 'asdasdaoptionscontrol_select' );
+			$parent->class = 'pct50';
+			$parent->options = array();
+			$parent->options[ '' ] = ''; // top should be blank
+			$right = array();
+			foreach( $all_terms as $term ) {
+				while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
+					array_pop($right);
+				}
+				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
+				$right[] = $term->mptt_right;
 			}
-			$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
-			$right[] = $term->mptt_right;
+			$action = $form->append( 'hidden', 'action', 'create' );
+			$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
+			$save_button->class = 'pct20 last';
+
+			$form->on_success( array($this, 'formui_submit') );
+
+ 		} 
+		else { // edit form for existing category
+
+			$which_category = $_GET[ 'category' ];
+			$category = $this->vocabulary->get_term( $which_category );
+			if ( !$category ) {
+				break;
+			}
+			$form = new FormUI( 'category-edit' );
+			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
+			$edit_fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category->term_display ) );
+// Utils::debug( $category->children() );
+// Utils::debug( $this->vocabulary->get_tree() );
+
+Utils::debug( array_diff( $this->vocabulary->get_tree()), $category->children() );			
+
+			$save_button = $edit_fieldset->append( 'submit', 'save', _t('Edit', 'simplecategories') );
+			$save_button->class = 'pct20 last';
+	
+			$form->on_success( array($this, 'formui_submit') );
+// Utils::debug( $form->get() );
 		}
-		$action = $form->append( 'hidden', 'action', 'create' );
-		$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
-		$save_button->class = 'pct20 last';
-
-		$form->on_success( array($this, 'formui_submit') );
-
 		$theme->form = $form->get();
 
 		$theme->display( 'categories' );
- 
 		// End everything
 		exit;
 	}
 
 	public function formui_submit( FormUI $form )
 	{
-		// probably should have some sort of action switch.
+		// probably should have some sort of action switch. Or switch on the form id, even.
+		// also then only need to check if the category in question is empty.
 
 		if( isset($form->new_term) && ( $form->new_term->value <> '' ) ) {
 
 			// time to create the new term.
 			$form_parent = $form->parent->value;
 			$new_term = $form->new_term->value;
-
 
 			// If a new term has been set, add it to the categories vocabulary
 			if ( '' != $form_parent ) {
@@ -211,7 +235,7 @@ die( "<h1>Editing that term</h1>" );
 			$parent_term = null;
 			$descendants = null;
 
-			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text');
+			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text' );
 			$form->categories->class = 'check-change';
 			$form->categories->tabindex = $form->tags->tabindex + 1;
 			$form->move_after( $form->categories, $form->tags );
@@ -383,6 +407,11 @@ die( "<h1>Editing that term</h1>" );
 		$vocabulary = Vocabulary::get(self::$vocabulary);
 		// should there be a Plugins::act( 'category_delete_before' ...?
 		$term = $vocabulary->get_term( $category );
+// Utils::debug( $term );
+		if ( !$term ) {
+			return false; // no match for category
+		}
+
 		$result = $vocabulary->delete_term( $term);
 
 		if ( $result ) {
