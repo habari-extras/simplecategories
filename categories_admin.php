@@ -5,7 +5,7 @@
 	if (isset( $_GET['action'] ) and User::identify()->can( 'manage_categories' ) ) {
 		switch( $_GET[ 'action' ] ) {
 			case "delete":
-die( "<h1>Delete</h1>" );
+				SimpleCategories::delete_category( $_GET[ 'category' ] );
 				break;
 			case "edit":
 die( "<h1>Edit</h1>" );

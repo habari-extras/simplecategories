@@ -368,6 +368,23 @@ class SimpleCategories extends Plugin
 		}
 		return $categories;
 	}
+
+	/**
+	 * function delete_category
+	 * Deletes an existing category and all relations to it.
+	 **/
+	public static function delete_category( $category = '' )
+	{
+		// should there be a Plugins::act( 'category_delete_before' ...?
+		$term = $this->vocabulary->get_term( $category );
+		$result = $vocabulary->delete_term( $term);
+
+		if ( $result ) {
+			EventLog::log( sprintf(_t('Category \'%1$s\' deleted.'), $category), 'info', 'content', 'simplecategories' );
+		}
+		// should there be a Plugins::act( 'category_delete_after' ...?
+		return $result;
+	}
 }
 
 class SimpleCategoriesFormat extends Format {
