@@ -89,11 +89,11 @@ class SimpleCategories extends Plugin
 			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
 
 			$create_fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category', 'simplecategories' ) );
-			$new_term = $create_fieldset->append( 'text', 'new_term', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
-			$new_term->add_validator( 'validate_required' );
+			$category = $create_fieldset->append( 'text', 'category', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
+			$category->add_validator( 'validate_required' );
 
-			$new_term->class = 'pct30';
-			$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), 'asdasdaoptionscontrol_select' );
+			$category->class = 'pct30';
+			$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), 'optionscontrol_select' ); // $template doesn't work
 			$parent->class = 'pct50';
 			$parent->options = array();
 			$parent->options[ '' ] = ''; // top should be blank
@@ -115,17 +115,41 @@ class SimpleCategories extends Plugin
 		else { // edit form for existing category
 
 			$which_category = $_GET[ 'category' ];
-			$category = $this->vocabulary->get_term( $which_category );
-			if ( !$category ) {
+			$category_term = $this->vocabulary->get_term( $which_category );
+			if ( !$category_term ) {
 				break;
 			}
+
+			$parent_term = $category_term->parent();
+			if ( !$parent_term ) {
+				$parent_term_display = '';
+			}
+			else {
+				$parent_term_display = $parent_term->term_display;
+			}
+
 			$form = new FormUI( 'category-edit' );
 			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
-			$edit_fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category->term_display ) );
-// Utils::debug( $category->children() );
-// Utils::debug( $this->vocabulary->get_tree() );
+			$category_id = $form->append( 'hidden', 'category_id', $category_term->id );
+			$edit_fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category_term->term_display ) );
+			$category = $edit_fieldset->append( 'text', 'category', 'null:null', _t( 'Rename Category', 'simplecategories' ), 'formcontrol_text' );
+			$category->value = $category_term->term_display;
+			$category->add_validator( 'validate_required' );
+			$category->class = 'pct30';
 
-Utils::debug( array_diff( $this->vocabulary->get_tree()), $category->children() );			
+			$parent = $edit_fieldset->append( 'select', 'parent', 'null:null', sprintf( _t( 'Current Parent: <b>%1$s</b> Change Parent to:', 'simplecategories' ), $parent_term_display ), 'asdasdaoptionscontrol_select' );
+			$parent->class = 'pct50';
+			$parent->options = array();
+			$right = array();
+			foreach( $category_term->not_descendants() as $term ) {
+				while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
+					array_pop($right);
+				}
+				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
+				// need to add 'selected' for the existing parent
+				$right[] = $term->mptt_right;
+			}
+
 
 			$save_button = $edit_fieldset->append( 'submit', 'save', _t('Edit', 'simplecategories') );
 			$save_button->class = 'pct20 last';
@@ -145,33 +169,37 @@ Utils::debug( array_diff( $this->vocabulary->get_tree()), $category->children() 
 		// probably should have some sort of action switch. Or switch on the form id, even.
 		// also then only need to check if the category in question is empty.
 
-		if( isset($form->new_term) && ( $form->new_term->value <> '' ) ) {
+		if( isset($form->category) && ( $form->category->value <> '' ) ) {
+			if( !isset( $form->category_id ) ) {
 
-			// time to create the new term.
-			$form_parent = $form->parent->value;
-			$new_term = $form->new_term->value;
+				// time to create the new term.
+				$form_parent = $form->parent->value;
+				$new_term = $form->category->value;
 
-			// If a new term has been set, add it to the categories vocabulary
-			if ( '' != $form_parent ) {
-				// Make sure the parent term exists.
-				$parent_term = $this->vocabulary->get_term( $form_parent );
+				// If a new term has been set, add it to the categories vocabulary
+				if ( '' != $form_parent ) {
+					// Make sure the parent term exists.
+					$parent_term = $this->vocabulary->get_term( $form_parent );
 
-				if ( null == $parent_term ) {
-					// There's no term for the parent, add it as a top-level term
-					$parent_term = $this->vocabulary->add_term( $form_parent );
+					if ( null == $parent_term ) {
+						// There's no term for the parent, add it as a top-level term
+						$parent_term = $this->vocabulary->add_term( $form_parent );
+					}
+
+					$category_term = $this->vocabulary->add_term( $new_term, $parent_term );
 				}
-
-				$category_term = $this->vocabulary->add_term( $new_term, $parent_term );
+				else {
+					$category_term = $this->vocabulary->add_term( $new_term );
+				}
 			}
 			else {
-				$category_term = $this->vocabulary->add_term( $new_term );
+				// category_id is set, edit an existing term
+				// need to make sure it's an existing term.
+
+				// Rename the category, if it has changed.
+
+				// Switch parent, if it has changed.
 			}
-
-		}
-		else if( isset( $form->edit_term) && ( $form->edit_term->value <> '' ) ) {
-
-			// existing term, we need to edit it
-die( "<h1>Editing that term</h1>" );
 		}
 	}
 
