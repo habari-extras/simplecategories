@@ -36,15 +36,25 @@
 			while ( count($right) > 0 && $right[count($right) - 1] < $category->mptt_right ) {
 				array_pop($right);
 			}
-			$pad = count($right)*5 + 5;
-			$rest = 95 - $pad;
-			$titlelink = '<a href="' . URL::get( 'admin', array( 'page' => 'posts', 'search' => "category:{$category->term}" ) ). '" title="' . 
-					_t( "Manage content categorized '{$category->term_display}'" ) . "\">{$category->term_display}</a>";
+			$pad = count($right)*5;
+			$rest = 100 - $pad;
+			$titlelink = sprintf(
+				'<a href="%s" title="%s">%s</a>',
+				URL::get( 'admin', array( 'page' => 'posts', 'search' => 'category:' . $category->term ) ),
+				_t( "Manage content categorized '%s'", array($category->term_display), 'simplecategories' ),
+				$category->term_display
+			);
 
-/* debugging only */	$titlelink .= "<h4>{$category->mptt_left} :: {$category->mptt_right}</h4>"; 
+			// debugging
+			$titlelink .= "<h4>{$category->mptt_left} :: {$category->mptt_right}</h4>";
 			$dropbutton = '<ul class="dropbutton"><li><a href="'. URL::get( 'admin', array( 'page' => 'categories', 'action' => 'edit', 'category' => $category->term )  ) . '" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' . 
 					_t( "Edit" ) . '</a></li><li><a href="' . URL::get( 'admin', array( 'page' => 'categories', 'action' => 'delete', 'category' => $category->term ) ) . '" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';
-			echo "\n<div class='item plugin clear'><div class='head'><span class='pct{$pad}'>&nbsp;</span>\n<span class='pct{$rest} last'>$titlelink $dropbutton</span>\n</div></div>";
+			echo "\n<div class='item plugin clear'><div class='head'>";
+			if ( $pad ) {
+				echo "<span class='pct{$pad}'>&nbsp;</span>";
+			}
+			echo "\n<span class='pct{$rest} last'>$titlelink $dropbutton</span>\n</div></div>";
+			
 			$right[] = $category->mptt_right;
 		}
 	}
