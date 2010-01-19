@@ -43,12 +43,14 @@
 				$category->term_display
 			);
 
+			$dogs_eat_cats = _t('Contains %d posts.', array(Posts::get(array('tag_slug' => $category->term, 'count' => 'term'))), 'simplecategories' );
+
 			// debugging
 			$titlelink .= "<h4>{$category->mptt_left} :: {$category->mptt_right}</h4>";
 			$dropbutton = '<ul class="dropbutton"><li><a href="'. URL::get( 'admin', array( 'page' => 'categories', 'action' => 'edit', 'category' => $category->term )  ) . '" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' .
 					_t( "Edit" ) . '</a></li><li><a href="' . URL::get( 'admin', array( 'page' => 'categories', 'action' => 'delete', 'category' => $category->term ) ) . '" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';
 			echo "\n<div class='item plugin clear' style='border-left: {$pad}px solid #e9e9e9; border-color:#e9e9e9;'><div class='head'>";
-			echo "\n$titlelink $dropbutton\n</div></div>";
+			echo "\n$titlelink $dropbutton\n</div><p>$dogs_eat_cats</p></div>";
 
 			$right[] = $category->mptt_right;
 		}
