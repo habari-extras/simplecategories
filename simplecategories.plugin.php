@@ -105,7 +105,6 @@ class SimpleCategories extends Plugin
 				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
 				$right[] = $term->mptt_right;
 			}
-			$action = $form->append( 'hidden', 'action', 'create' );
 			$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
 			$save_button->class = 'pct20 last';
 
@@ -130,7 +129,7 @@ class SimpleCategories extends Plugin
 
 			$form = new FormUI( 'category-edit' );
 			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
-			$category_id = $form->append( 'hidden', 'category_id', $category_term->id );
+			$category_id = $form->append( 'hidden', 'category_id' )->value = $category_term->id; // send this id, for seeing what has changed
 			$edit_fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category_term->term_display ) );
 			$category = $edit_fieldset->append( 'text', 'category', 'null:null', _t( 'Rename Category', 'simplecategories' ), 'formcontrol_text' );
 			$category->value = $category_term->term_display;
@@ -148,8 +147,7 @@ class SimpleCategories extends Plugin
 				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
 				$right[] = $term->mptt_right;
 			}
-			$parent->value = $parent_term->id; // select the current parent
-			$current_parent = $edit_fieldset->append( 'hidden', 'current_parent', $parent_term->id ); // might not need this.
+			$parent->value = (!$parent_term ? '': $parent_term->id ); // select the current parent
 			$save_button = $edit_fieldset->append( 'submit', 'save', _t('Edit', 'simplecategories') );
 			$save_button->class = 'pct20 last';
 	
@@ -191,6 +189,8 @@ class SimpleCategories extends Plugin
 				}
 			}
 			else {
+Utils::debug( $this->vocabulary->get_term( $form->category_id ) );
+
 				// category_id is set, edit an existing term
 				// need to make sure it's an existing term.
 
