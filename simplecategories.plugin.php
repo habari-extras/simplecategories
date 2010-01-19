@@ -146,16 +146,14 @@ class SimpleCategories extends Plugin
 					array_pop($right);
 				}
 				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
-				// need to add 'selected' for the existing parent
 				$right[] = $term->mptt_right;
 			}
-
-
+			$parent->value = $parent_term->id; // select the current parent
+			$current_parent = $edit_fieldset->append( 'hidden', 'current_parent', $parent_term->id ); // might not need this.
 			$save_button = $edit_fieldset->append( 'submit', 'save', _t('Edit', 'simplecategories') );
 			$save_button->class = 'pct20 last';
 	
 			$form->on_success( array($this, 'formui_submit') );
-// Utils::debug( $form->get() );
 		}
 		$theme->form = $form->get();
 

@@ -16,9 +16,6 @@
 		// ok, token checked, but is it overkill?
 // 		Utils::debug( $_GET );
 	}	
-	$all_categories = array();
-	$all_categories = Vocabulary::get( 'categories' )->get_tree();
-// 	Utils::debug( $all_categories );
 ?>
 	<div class="container">
 
@@ -30,6 +27,8 @@
 <?php
 	// this should be in the plugin, not on this page.
 
+	$all_categories = array();
+	$all_categories = Vocabulary::get( 'categories' )->get_tree();
 	if ( count( $all_categories) > 0 ) {
 		$right = array();
 		foreach ( $all_categories as $category ) {
