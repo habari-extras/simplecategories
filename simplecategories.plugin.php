@@ -83,7 +83,7 @@ class SimpleCategories extends Plugin
 		$all_terms = array();
 		$all_terms = $this->vocabulary->get_tree();
 
-		if (!isset( $_GET[ 'category']) ) { // create new category form
+		if (!isset( $_GET[ 'category' ]) ) { // create new category form
 
 			$form = new FormUI( 'category-new' );
 			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
@@ -108,7 +108,7 @@ class SimpleCategories extends Plugin
 			$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
 			$save_button->class = 'pct20 last';
 
-			$form->on_success( array($this, 'formui_submit') );
+			$form->on_success( array($this, 'formui_create_submit') );
 
  		} 
 		else { // edit form for existing category
@@ -151,7 +151,7 @@ class SimpleCategories extends Plugin
 			$save_button = $edit_fieldset->append( 'submit', 'save', _t('Edit', 'simplecategories') );
 			$save_button->class = 'pct20 last';
 	
-			$form->on_success( array($this, 'formui_submit') );
+			$form->on_success( array($this, 'formui_edit_submit') );
 		}
 		$theme->form = $form->get();
 
@@ -160,43 +160,49 @@ class SimpleCategories extends Plugin
 		exit;
 	}
 
-	public function formui_submit( FormUI $form )
+	public function formui_create_submit( FormUI $form )
 	{
-		// probably should have some sort of action switch. Or switch on the form id, even.
-		// also then only need to check if the category in question is empty.
-
 		if( isset($form->category) && ( $form->category->value <> '' ) ) {
-			if( !isset( $form->category_id ) ) {
 
-				// time to create the new term.
-				$form_parent = $form->parent->value;
-				$new_term = $form->category->value;
+			// time to create the new term.
+			$form_parent = $form->parent->value;
+			$new_term = $form->category->value;
 
-				// If a new term has been set, add it to the categories vocabulary
-				if ( '' != $form_parent ) {
-					// Make sure the parent term exists.
-					$parent_term = $this->vocabulary->get_term( $form_parent );
-
+			// If a new term has been set, add it to the categories vocabulary
+			if ( '' != $form_parent ) {
+				// Make sure the parent term exists.
+				$parent_term = $this->vocabulary->get_term( $form_parent );
 					if ( null == $parent_term ) {
-						// There's no term for the parent, add it as a top-level term
-						$parent_term = $this->vocabulary->add_term( $form_parent );
-					}
+					// There's no term for the parent, add it as a top-level term
+					$parent_term = $this->vocabulary->add_term( $form_parent );
+				}
 
-					$category_term = $this->vocabulary->add_term( $new_term, $parent_term );
-				}
-				else {
-					$category_term = $this->vocabulary->add_term( $new_term );
-				}
+				$category_term = $this->vocabulary->add_term( $new_term, $parent_term );
 			}
 			else {
-Utils::debug( $this->vocabulary->get_term( $form->category_id ) );
+				$category_term = $this->vocabulary->add_term( $new_term );
+			}
+		}
+	}
 
-				// category_id is set, edit an existing term
-				// need to make sure it's an existing term.
+	public function formui_edit_submit( FormUI $form )
+	{
+Utils::debug( $form );
+die();
+		if( isset($form->category) && ( $form->category->value <> '' ) ) {
+			if( isset( $form->category_id ) ) {
 
-				// Rename the category, if it has changed.
+				$current_term = $this->vocabulary->get_term( $form->category_id );
 
-				// Switch parent, if it has changed.
+				// If there's a changed parent, change the parent.
+ 				$form_parent = $form->parent->value;
+				if ( $current_term->parent() ) {
+					if ( $current_term->parent()->id <> $form->parent->value ) {
+						// change the parent to the new ID.
+					}
+				}
+				// If the category has been renamed, modify the term
+
 			}
 		}
 	}
