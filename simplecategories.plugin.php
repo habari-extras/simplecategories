@@ -128,7 +128,7 @@ class SimpleCategories extends Plugin
 			}
 
 			$form = new FormUI( 'category-edit' );
-			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
+			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories&category=' . $_GET[ 'category' ] ) );
 			$category_id = $form->append( 'hidden', 'category_id' )->value = $category_term->id; // send this id, for seeing what has changed
 			$edit_fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category_term->term_display ) );
 			$category = $edit_fieldset->append( 'text', 'category', 'null:null', _t( 'Rename Category', 'simplecategories' ), 'formcontrol_text' );
