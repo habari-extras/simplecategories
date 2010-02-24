@@ -116,7 +116,7 @@ class SimpleCategories extends Plugin
 			$which_category = $_GET[ 'category' ];
 			$category_term = $this->vocabulary->get_term( $which_category );
 			if ( !$category_term ) {
-				break;
+				exit;
 			}
 
 			$parent_term = $category_term->parent();
@@ -199,6 +199,7 @@ die();
 				if ( $current_term->parent() ) {
 					if ( $current_term->parent()->id <> $form->parent->value ) {
 						// change the parent to the new ID.
+						$this->vocabulary->move_term( $current_term, $form_parent );
 					}
 				}
 				// If the category has been renamed, modify the term
