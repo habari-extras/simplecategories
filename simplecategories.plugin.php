@@ -183,6 +183,8 @@ class SimpleCategories extends Plugin
 				$category_term = $this->vocabulary->add_term( $new_term );
 			}
 		}
+		// redirect to the page to update the form
+		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' )), true );
 	}
 
 	public function formui_edit_submit( FormUI $form )
@@ -195,8 +197,9 @@ class SimpleCategories extends Plugin
  				$form_parent = $form->parent->value;
 				$parent_term = $this->vocabulary->get_term( $form_parent );
 Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn't work.
+
 				if ( $current_term->parent() ) {
-					if ( $current_term->parent()->id <> $form->parent->value ) {
+					if ( $parent_term->id <> $form->parent->value ) {
 						// change the parent to the new ID.
 						$this->vocabulary->move_term( $current_term, $parent_term );
 					}
@@ -205,6 +208,8 @@ Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn'
 
 			}
 		}
+		// redirect to the page to update the form
+		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' )), true );
 	}
 
 	/**
