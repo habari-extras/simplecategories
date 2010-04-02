@@ -22,7 +22,7 @@ class SimpleCategories extends Plugin
 	 * Add the category vocabulary and create the admin token
 	 *
 	 **/
-	public function action_plugin_activation($file)
+	public function action_plugin_activation( $file )
 	{
 		if ( Plugins::id_from_file($file) == Plugins::id_from_file(__FILE__) ) {
 			$params = array(
@@ -45,7 +45,7 @@ class SimpleCategories extends Plugin
 	 * Remove the admin token
 	 *
 	 **/
-	public function action_plugin_deactivation($file)
+	public function action_plugin_deactivation( $file )
 	{
 		if ( Plugins::id_from_file($file) == Plugins::id_from_file(__FILE__) ) {
 			// delete default access token
@@ -58,7 +58,7 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_init()
 	{
-		$this->add_template( 'categories', dirname($this->get_file()) . '/categories_admin.php' );
+		$this->add_template( 'categories', dirname( $this->get_file()) . '/categories_admin.php' );
 	}
 
 	/**
@@ -66,7 +66,7 @@ class SimpleCategories extends Plugin
 	 **/
 	public function filter_admin_access_tokens( array $require_any, $page )
 	{
-		switch ($page) {
+		switch ( $page ) {
 			case 'categories':
 				$require_any = array( 'manage_categories' => true );
 				break;
@@ -100,7 +100,7 @@ class SimpleCategories extends Plugin
 			$right = array();
 			foreach( $all_terms as $term ) {
 				while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
-					array_pop($right);
+					array_pop( $right );
 				}
 				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
 				$right[] = $term->mptt_right;
@@ -108,7 +108,7 @@ class SimpleCategories extends Plugin
 			$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
 			$save_button->class = 'pct20 last';
 
-			$form->on_success( array($this, 'formui_create_submit') );
+			$form->on_success( array( $this, 'formui_create_submit' ) );
 
  		} 
 		else { // edit form for existing category
@@ -142,16 +142,16 @@ class SimpleCategories extends Plugin
 			$right = array();
 			foreach( $category_term->not_descendants() as $term ) {
 				while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
-					array_pop($right);
+					array_pop( $right );
 				}
 				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
 				$right[] = $term->mptt_right;
 			}
 			$parent->value = (!$parent_term ? '': $parent_term->id ); // select the current parent
-			$save_button = $edit_fieldset->append( 'submit', 'save', _t('Edit', 'simplecategories') );
+			$save_button = $edit_fieldset->append( 'submit', 'save', _t( 'Edit', 'simplecategories' ) );
 			$save_button->class = 'pct20 last';
 	
-			$form->on_success( array($this, 'formui_edit_submit') );
+			$form->on_success( array( $this, 'formui_edit_submit' ) );
 		}
 		$theme->form = $form->get();
 
@@ -187,9 +187,9 @@ class SimpleCategories extends Plugin
 
 	public function formui_edit_submit( FormUI $form )
 	{
-Utils::debug( $form );
-die();
-		if( isset($form->category) && ( $form->category->value <> '' ) ) {
+// Utils::debug( $form );
+// die();
+		if( isset( $form->category ) && ( $form->category->value <> '' ) ) {
 			if( isset( $form->category_id ) ) {
 
 				$current_term = $this->vocabulary->get_term( $form->category_id );
@@ -213,7 +213,7 @@ die();
 	 * Retrieve the terms of the vocabulary 
 	 * @return Array The Term objects in the vocabulary, in aplhabetical order
 	 **/
-	private function get_terms($orderby = 'term_display')
+	private function get_terms( $orderby = 'term_display' )
 	{
 		return DB::get_results(
 			"SELECT * FROM {terms} WHERE vocabulary_id = :vocabulary_id ORDER BY :orderby",
@@ -242,17 +242,17 @@ die();
 	public function filter_adminhandler_post_loadplugins_main_menu( array $menu )
 	{
 		$item_menu = array( 'categories' => array(
-			'url' => URL::get( 'admin', 'page=categories'),
-			'title' => _t('Manage blog categories'),
-			'text' => _t('Categories'),
+			'url' => URL::get( 'admin', 'page=categories' ),
+			'title' => _t( 'Manage blog categories' ),
+			'text' => _t( 'Categories' ),
 			'hotkey' => 'W',
 			'selected' => false,
 			'access' => array( 'manage_categories' => true )
 		) );
 		
 		$slice_point = array_search( 'dashboard', array_keys( $menu ) ); // Element will be inserted before "groups"
-		$pre_slice = array_slice( $menu, 0, $slice_point);
-		$post_slice = array_slice( $menu, $slice_point);
+		$pre_slice = array_slice( $menu, 0, $slice_point );
+		$post_slice = array_slice( $menu, $slice_point );
 		
 		$menu = array_merge( $pre_slice, $item_menu, $post_slice );
 		
@@ -357,14 +357,14 @@ die();
 	 **/
 	public function filter_template_where_filters( $filters ) {
 		$vars = Controller::get_handler_vars();
-		if( isset( $vars['category_slug'] ) ) {
+		if( isset( $vars[ 'category_slug' ] ) ) {
 // 			$filters['tag_slug'] = $vars['category_slug'];
-			$term = Term::get($this->vocabulary, $vars['category_slug']);
+			$term = Term::get( $this->vocabulary, $vars[ 'category_slug' ] );
 			if ( $term instanceof Term ) {
 				$terms = (array) $term->descendants();
-				$terms = array_map(create_function('$a', 'return $a->term;'), $terms);
-				$terms = array_push($terms, $vars['category_slug']);
-				$filters['tag_slug'] = $terms;
+				$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
+				$terms = array_push( $terms, $vars[ 'category_slug' ] );
+				$filters[ 'tag_slug' ] = $terms;
 			}
 		}
 		return $filters;
@@ -377,7 +377,7 @@ die();
 	 */
 	public function filter_theme_act_display_entries_by_category( $handled, $theme ) {
 		$paramarray = array();
-		$paramarray['fallback'] = array(
+		$paramarray[ 'fallback' ] = array(
 			'category.{$category}',
 			'category',
 			'multiple',
@@ -405,7 +405,7 @@ die();
 		$result = $this->vocabulary->get_object_terms( 'post', $post->id );
 		if( $result ) {
 			foreach( $result as $t ) {
-				$categories[$t->term] = $t->term_display;
+				$categories[ $t->term ] = $t->term_display;
 			}
 		}
 		return $categories;
@@ -437,7 +437,7 @@ die();
 	 **/
 	public static function delete_category( $category = '' )
 	{
-		$vocabulary = Vocabulary::get(self::$vocabulary);
+		$vocabulary = Vocabulary::get( self::$vocabulary );
 		// should there be a Plugins::act( 'category_delete_before' ...?
 		$term = $vocabulary->get_term( $category );
 // Utils::debug( $term );
@@ -445,10 +445,10 @@ die();
 			return false; // no match for category
 		}
 
-		$result = $vocabulary->delete_term( $term);
+		$result = $vocabulary->delete_term( $term );
 
 		if ( $result ) {
-			EventLog::log( sprintf(_t('Category \'%1$s\' deleted.'), $category), 'info', 'content', 'simplecategories' );
+			EventLog::log( sprintf( _t( 'Category \'%1$s\' deleted.' ), $category ), 'info', 'content', 'simplecategories' );
 		}
 		// should there be a Plugins::act( 'category_delete_after' ...?
 		return $result;
@@ -473,18 +473,18 @@ class SimpleCategoriesFormat extends Format {
 		}
 
 		if ( $between_last === NULL ) {
-			$between_last = _t(' and ');
+			$between_last = _t( ' and ', 'simplecategories' );
 		}
 
-		$array = array_map('SimpleCategoriesFormat::link_cat', $array, array_keys($array));
-		$last = array_pop($array);
-		$out = implode($between, $array);
-		$out .= ($out == '') ? $last : $between_last . $last;
+		$array = array_map( 'SimpleCategoriesFormat::link_cat', $array, array_keys( $array ) );
+		$last = array_pop( $array );
+		$out = implode( $between, $array );
+		$out .= ( $out == '' ) ? $last : $between_last . $last;
 		return $out;
 	}
 
 	public static function link_cat( $a, $b ) {
-		return '<a href="' . URL::get("display_entries_by_category", array( "category_slug" => $b) ) . "\" rel=\"category\">$a</a>";
+		return '<a href="' . URL::get( "display_entries_by_category", array( "category_slug" => $b ) ) . "\" rel=\"category\">$a</a>";
 	}
 
 }
