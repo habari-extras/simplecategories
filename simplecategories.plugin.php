@@ -162,7 +162,7 @@ class SimpleCategories extends Plugin
 
 	public function formui_create_submit( FormUI $form )
 	{
-		if( isset($form->category) && ( $form->category->value <> '' ) ) {
+		if( isset( $form->category ) && ( $form->category->value <> '' ) ) {
 
 			// time to create the new term.
 			$form_parent = $form->parent->value;
@@ -187,19 +187,18 @@ class SimpleCategories extends Plugin
 
 	public function formui_edit_submit( FormUI $form )
 	{
-// Utils::debug( $form );
-// die();
 		if( isset( $form->category ) && ( $form->category->value <> '' ) ) {
 			if( isset( $form->category_id ) ) {
-
-				$current_term = $this->vocabulary->get_term( $form->category_id );
+				$current_term = $this->vocabulary->get_term( $form->category_id->value );
 
 				// If there's a changed parent, change the parent.
  				$form_parent = $form->parent->value;
+				$parent_term = $this->vocabulary->get_term( $form_parent );
+Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn't work.
 				if ( $current_term->parent() ) {
 					if ( $current_term->parent()->id <> $form->parent->value ) {
 						// change the parent to the new ID.
-						$this->vocabulary->move_term( $current_term, $form_parent );
+						$this->vocabulary->move_term( $current_term, $parent_term );
 					}
 				}
 				// If the category has been renamed, modify the term
@@ -225,8 +224,7 @@ class SimpleCategories extends Plugin
 		);
 	}
 
-
-	/**
+ 	/**
 	 * Cover both post and get requests for the page
 	 **/
 	public function alias()
