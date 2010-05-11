@@ -141,6 +141,7 @@ class SimpleCategories extends Plugin
 			$parent = $edit_fieldset->append( 'select', 'parent', 'null:null', sprintf( _t( 'Current Parent: <b>%1$s</b> Change Parent to:', 'simplecategories' ), $parent_term_display ), 'asdasdaoptionscontrol_select' );
 			$parent->class = 'pct50';
 			$parent->options = array();
+			$parent->options[''] = ''; // top should be blank
 			$right = array();
 			foreach( $category_term->not_descendants() as $term ) {
 				while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
