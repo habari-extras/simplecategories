@@ -108,6 +108,8 @@ class SimpleCategories extends Plugin
 			$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
 			$save_button->class = 'pct20 last';
 
+			$cancelbtn = $form->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
+
 			$form->on_success( array( $this, 'formui_create_submit' ) );
 
  		} 
@@ -150,6 +152,8 @@ class SimpleCategories extends Plugin
 			$parent->value = (!$parent_term ? '': $parent_term->id ); // select the current parent
 			$save_button = $edit_fieldset->append( 'submit', 'save', _t( 'Edit', 'simplecategories' ) );
 			$save_button->class = 'pct20 last';
+
+			$cancel_button = $form->append( 'submit', 'cancel_btn', _t( 'Cancel', 'simplecategories' ) );
 	
 			$form->on_success( array( $this, 'formui_edit_submit' ) );
 		}
@@ -194,14 +198,14 @@ class SimpleCategories extends Plugin
 				$current_term = $this->vocabulary->get_term( $form->category_id->value );
 
 				// If there's a changed parent, change the parent.
- 				$form_parent = $form->parent->value;
-				$parent_term = $this->vocabulary->get_term( $form_parent );
+				$cur_parent = $current_term->parent();
+				$new_parent = $this->vocabulary->get_term( $form->parent->value );
 Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn't work.
 
-				if ( $current_term->parent() ) {
-					if ( $parent_term->id <> $form->parent->value ) {
+				if ( $cur_parent ) {
+					if ( $cur_parent->id <> $form->parent->value ) {
 						// change the parent to the new ID.
-						$this->vocabulary->move_term( $current_term, $parent_term );
+						$this->vocabulary->move_term( $current_term, $new_parent );
 					}
 				}
 				// If the category has been renamed, modify the term
@@ -362,11 +366,18 @@ Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn'
 		$vars = Controller::get_handler_vars();
 		if( isset( $vars[ 'category_slug' ] ) ) {
 			$term = Term::get( $this->vocabulary, $vars[ 'category_slug' ] );
-			if ( $term instanceof Term ) {
+			if ( $term instanceof Term && $term->vocabulary == $this->vocabulary ) {
 				$terms = (array) $term->descendants();
-				$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
-				array_push( $terms, $vars[ 'category_slug' ] );
-				$filters[ 'tag_slug' ] = $terms;
+				if ( count( $terms ) ) {
+					$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
+					$terms = array_push( $terms, $vars['category_slug'] );
+					$filters['tag_slug'] = $terms;
+				}
+			}
+			else if ( $term instanceof Term ) {
+			}
+			else {
+				$filters['tag_slug'] = $vars['category_slug'];
 			}
 		}
 		return $filters;
