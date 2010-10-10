@@ -371,17 +371,29 @@ Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn'
 				$terms = (array) $term->descendants();
 				if ( count( $terms ) ) {
 					$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
-					$terms = array_push( $terms, $vars['category_slug'] );
-					$filters['tag_slug'] = $terms;
+					array_push( $terms, $vars['category_slug'] );
+					$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( self::$vocabulary . ':all:term' => $terms ) );
 				}
 			}
 			else if ( $term instanceof Term ) {
 			}
 			else {
-				$filters['tag_slug'] = $vars['category_slug'];
+				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( self::$vocabulary . ':term' => $vars['category_slug'] ) );
 			}
 		}
 		return $filters;
+
+//		$vars = Controller::get_handler_vars();
+//		if( isset( $vars['category_slug'] ) ) {
+//			$term = Term::get($this->vocabulary, $vars['category_slug']);
+//			if ( $term instanceof Term ) {
+//				$terms = (array)$term->descendants();
+//				$terms = array_map(create_function('$a', 'return $a->term;'), $terms);
+//				array_push($terms, $vars['category_slug']);
+//				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( self::$vocabulary . ':all:term' => $terms ) );
+//			}
+//		}
+//		return $filters;
 	}
 
 	/**
