@@ -8,12 +8,12 @@ class SimpleCategories extends Plugin
 	protected $_vocabulary;
 
 
-	public function  __get($name)
+	public function  __get( $name )
 	{
 		switch ( $name ) {
 			case 'vocabulary':
-				if ( !isset($this->_vocabulary) ) {
-					$this->_vocabulary = Vocabulary::get(self::$vocabulary);
+				if ( !isset( $this->_vocabulary ) ) {
+					$this->_vocabulary = Vocabulary::get( self::$vocabulary );
 				}
 				return $this->_vocabulary;
 		}
@@ -24,7 +24,7 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_plugin_activation( $file )
 	{
-		if ( Plugins::id_from_file($file) == Plugins::id_from_file(__FILE__) ) {
+		if ( Plugins::id_from_file( $file ) == Plugins::id_from_file(__FILE__) ) {
 			$params = array(
 				'name' => self::$vocabulary,
 				'description' => 'A vocabulary for describing Categories',
@@ -35,7 +35,7 @@ class SimpleCategories extends Plugin
 			$simple_categories->insert();
 
 			// create default access token
-			ACL::create_token( 'manage_categories', _t('Manage categories'), 'Administration', false );
+			ACL::create_token( 'manage_categories', _t( 'Manage categories' ), 'Administration', false );
 			$group = UserGroup::get_by_name( 'admin' );
 			$group->grant( 'manage_categories' );
 		}
@@ -47,7 +47,7 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_plugin_deactivation( $file )
 	{
-		if ( Plugins::id_from_file($file) == Plugins::id_from_file(__FILE__) ) {
+		if ( Plugins::id_from_file( $file ) == Plugins::id_from_file(__FILE__) ) {
 			// delete default access token
 			ACL::destroy_token( 'manage_categories' );
 		}
@@ -58,7 +58,7 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_init()
 	{
-		$this->add_template( 'categories', dirname( $this->get_file()) . '/categories_admin.php' );
+		$this->add_template( 'categories', dirname( $this->get_file() ) . '/categories_admin.php' );
 	}
 
 	/**
@@ -83,7 +83,7 @@ class SimpleCategories extends Plugin
 		$all_terms = array();
 		$all_terms = $this->vocabulary->get_tree();
 
-		if (!isset( $_GET[ 'category' ]) ) { // create new category form
+		if (!isset( $_GET[ 'category' ] ) ) { // create new category form
 
 			$form = new FormUI( 'category-new' );
 			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
@@ -96,16 +96,16 @@ class SimpleCategories extends Plugin
 			$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), 'optionscontrol_select' ); // $template doesn't work
 			$parent->class = 'pct50';
 			$parent->options = array();
-			$parent->options[ '' ] = ''; // top should be blank
+			$parent->options[''] = ''; // top should be blank
 			$right = array();
 			foreach( $all_terms as $term ) {
-				while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
+				while ( count( $right ) > 0 && $right[count( $right ) - 1] < $term->mptt_right ) {
 					array_pop( $right );
 				}
-				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
+				$parent->options[ $term->id ] = str_repeat( ' - ', count( $right ) ) . $term->term_display;
 				$right[] = $term->mptt_right;
 			}
-			$save_button = $create_fieldset->append( 'submit', 'save', _t('Create', 'simplecategories') );
+			$save_button = $create_fieldset->append( 'submit', 'save', _t( 'Create', 'simplecategories' ) );
 			$save_button->class = 'pct20 last';
 
 			$cancelbtn = $form->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
@@ -144,13 +144,13 @@ class SimpleCategories extends Plugin
 			$parent->options[''] = ''; // top should be blank
 			$right = array();
 			foreach( $category_term->not_descendants() as $term ) {
-				while ( count($right) > 0 && $right[count($right) - 1] < $term->mptt_right ) {
+				while ( count( $right ) > 0 && $right[count( $right ) - 1] < $term->mptt_right ) {
 					array_pop( $right );
 				}
-				$parent->options[ $term->id ] = str_repeat(' - ', count($right) ) . $term->term_display;
+				$parent->options[ $term->id ] = str_repeat( ' - ', count( $right ) ) . $term->term_display;
 				$right[] = $term->mptt_right;
 			}
-			$parent->value = (!$parent_term ? '': $parent_term->id ); // select the current parent
+			$parent->value = ( !$parent_term ? '': $parent_term->id ); // select the current parent
 			$save_button = $edit_fieldset->append( 'submit', 'save', _t( 'Edit', 'simplecategories' ) );
 			$save_button->class = 'pct20 last';
 
@@ -189,7 +189,7 @@ class SimpleCategories extends Plugin
 			}
 		}
 		// redirect to the page to update the form
-		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' )), true );
+		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' ) ), true );
 	}
 
 	public function formui_edit_submit( FormUI $form )
@@ -214,7 +214,7 @@ Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn'
 			}
 		}
 		// redirect to the page to update the form
-		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' )), true );
+		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' ) ), true );
 	}
 
 	/**
@@ -276,7 +276,7 @@ Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn'
 			$parent_term = null;
 			$descendants = null;
 
-			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas'), 'admincontrol_text' );
+			$form->append( 'text', 'categories', 'null:null', _t( 'Categories, separated by, commas' ), 'admincontrol_text' );
 			$form->categories->class = 'check-change';
 			$form->categories->tabindex = $form->tags->tabindex + 1;
 			$form->move_after( $form->categories, $form->tags );
