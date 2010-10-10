@@ -31,8 +31,7 @@ class SimpleCategories extends Plugin
 				'features' => array( 'multiple', 'hierarchical' )
 			);
 
-			$simple_categories = new Vocabulary( $params );
-			$simple_categories->insert();
+			Vocabulary::create( $params );
 
 			// create default access token
 			ACL::create_token( 'manage_categories', _t( 'Manage categories' ), 'Administration', false );
