@@ -43,7 +43,7 @@
 				$category->term_display
 			);
 
-			$dogs_eat_cats = _t('Contains %d posts.', array(Posts::get(array('tag_slug' => $category->term, 'count' => 'term'))), 'simplecategories' );
+			$dogs_eat_cats = _t('Contains %d posts.', array( Posts::get(array ('vocabulary'=> array( 'categories:term' => $category->term ), 'count' => 'term' ) ) ), 'simplecategories' );
 
 			// debugging
 			$titlelink .= "<h4>{$category->mptt_left} :: {$category->mptt_right}</h4>";
