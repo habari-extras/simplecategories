@@ -200,13 +200,16 @@ class SimpleCategories extends Plugin
 				// If there's a changed parent, change the parent.
 				$cur_parent = $current_term->parent();
 				$new_parent = $this->vocabulary->get_term( $form->parent->value );
-Utils::debug( $current_term, $parent_term ); // I see terms here. But 201 doesn't work.
 
 				if ( $cur_parent ) {
 					if ( $cur_parent->id <> $form->parent->value ) {
 						// change the parent to the new ID.
 						$this->vocabulary->move_term( $current_term, $new_parent );
 					}
+				}
+				else 	{
+					// cur_parent is false, should mean $current_term is a root element
+					$this->vocabulary->move_term( $current_term, $new_parent );
 				}
 				// If the category has been renamed, modify the term
 
