@@ -219,23 +219,6 @@ class SimpleCategories extends Plugin
 		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' ) ), true );
 	}
 
-	/**
-	 * TEMPORARY FUNCTION, SHOULD BE IMPLEMENTED BETTER IN VOCABULARY
-	 * Retrieve the terms of the vocabulary 
-	 * @return Array The Term objects in the vocabulary, in aplhabetical order
-	 **/
-	private function get_terms( $orderby = 'term_display' )
-	{
-		return DB::get_results(
-			"SELECT * FROM {terms} WHERE vocabulary_id = :vocabulary_id ORDER BY :orderby",
-			array(
-				'orderby' => $orderby,
-				'vocabulary_id' => $this->vocabulary->id
-			),
-			'Term'
-		);
-	}
-
  	/**
 	 * Cover both post and get requests for the page
 	 **/
