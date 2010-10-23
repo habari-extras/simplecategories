@@ -90,20 +90,11 @@ class SimpleCategories extends Plugin
 			$create_fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category', 'simplecategories' ) );
 			$category = $create_fieldset->append( 'text', 'category', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
 			$category->add_validator( 'validate_required' );
-
 			$category->class = 'pct30';
-			$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), 'optionscontrol_select' ); // $template doesn't work
+			
+			$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), $this->vocabulary->get_options(), 'optionscontrol_select' );
 			$parent->class = 'pct50';
-			$parent->options = array();
-			$parent->options[''] = ''; // top should be blank
-			$right = array();
-			foreach( $all_terms as $term ) {
-				while ( count( $right ) > 0 && $right[count( $right ) - 1] < $term->mptt_right ) {
-					array_pop( $right );
-				}
-				$parent->options[ $term->id ] = str_repeat( ' - ', count( $right ) ) . $term->term_display;
-				$right[] = $term->mptt_right;
-			}
+
 			$save_button = $create_fieldset->append( 'submit', 'save', _t( 'Create', 'simplecategories' ) );
 			$save_button->class = 'pct20 last';
 
@@ -137,19 +128,10 @@ class SimpleCategories extends Plugin
 			$category->add_validator( 'validate_required' );
 			$category->class = 'pct30';
 
-			$parent = $edit_fieldset->append( 'select', 'parent', 'null:null', sprintf( _t( 'Current Parent: <b>%1$s</b> Change Parent to:', 'simplecategories' ), $parent_term_display ), 'asdasdaoptionscontrol_select' );
+			$parent = $edit_fieldset->append( 'select', 'parent', 'null:null', _t( 'Current Parent: <b>%1$s</b> Change Parent to:', array($parent_term_display), 'simplecategories'), $this->vocabulary->get_options(), 'optionscontrol_select' );
 			$parent->class = 'pct50';
-			$parent->options = array();
-			$parent->options[''] = ''; // top should be blank
-			$right = array();
-			foreach( $category_term->not_descendants() as $term ) {
-				while ( count( $right ) > 0 && $right[count( $right ) - 1] < $term->mptt_right ) {
-					array_pop( $right );
-				}
-				$parent->options[ $term->id ] = str_repeat( ' - ', count( $right ) ) . $term->term_display;
-				$right[] = $term->mptt_right;
-			}
 			$parent->value = ( !$parent_term ? '': $parent_term->id ); // select the current parent
+
 			$save_button = $edit_fieldset->append( 'submit', 'save', _t( 'Edit', 'simplecategories' ) );
 			$save_button->class = 'pct20 last';
 
