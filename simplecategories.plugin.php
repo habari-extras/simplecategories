@@ -193,8 +193,12 @@ class SimpleCategories extends Plugin
 					// cur_parent is false, should mean $current_term is a root element
 					$this->vocabulary->move_term( $current_term, $new_parent );
 				}
-				// If the category has been renamed, modify the term
 
+			if ( $form->category->value !== $current_term->term_display ) {
+Utils::debug( $form->category->value, $current_term->term_display );
+			SimpleCategories::rename( $form->category->value, $current_term->term_display );
+				// If the category has been renamed, modify the term}
+				}
 			}
 		}
 		// redirect to the page to update the form
@@ -426,6 +430,82 @@ class SimpleCategories extends Plugin
 		}
 		// should there be a Plugins::act( 'category_delete_after' ...?
 		return $result;
+	}
+
+	/**
+	 * Renames a category
+	 * If the master category exists, the categories will be merged with it.
+	 * If not, it will be created first.
+	 *
+	 * Adapted from Tags::rename()
+	 *
+	 * @param mixed tag The category text, slug or id to be renamed
+	 * @param mixed master The category to which it should be renamed, or the slug, text or id of it
+	 **/
+	public static function rename( $master, $category, $object_type = 'post' )
+	{
+		$vocabulary = Vocabulary::get( self::$vocabulary );
+		$type_id = Vocabulary::object_type_id( $object_type );
+
+		$post_ids = array();
+		$names = array();
+
+// if it's a rename, and the other doesn't exist, just change term->term_display, term->term; update();
+// http://drunkenmonkey.org/irc/habari/2010-11-06\#T05-26-07
+
+
+		// get array of existing tags first to make sure we don't conflict with a new master tag
+// 		foreach ( $tags as $tag ) {
+
+			$posts = array();
+			$term = $vocabulary->get_term( $category );
+
+			// get all the post ID's categorized with this category
+			$posts = $term->objects( $object_type );
+
+			if ( count( $posts ) > 0 ) {
+				// merge the current post ids into the list of all the post_ids we need for the new tag
+				$post_ids = array_merge( $post_ids, $posts );
+			}
+
+			$names[] = $category;
+			if ( $category != $master ) {
+// Should probably do something about the children of the term about to die
+// forget that, children can remain if it's not a merge
+				$vocabulary->delete_term( $term->id );
+			}
+// 		}
+
+		// get the master term
+		$master_term = $vocabulary->get_term( $master );
+
+		if ( !isset( $master_term->term ) ) {
+			// it didn't exist, so we assume it's text and create it
+			$master_term = $vocabulary->add_term( $master );
+
+			$master_ids = array();
+		}
+		else {
+			// get the posts the category is already on so we don't duplicate them
+			$master_ids = $master_term->objects( $object_type );
+
+		}
+
+		if ( count( $post_ids ) > 0 ) {
+			// only try and add the master category to posts it's not already on
+			$post_ids = array_diff( $post_ids, $master_ids );
+		}
+		else {
+			$post_ids = $master_ids;
+		}
+		// link the master category to each distinct post we removed categories from
+		foreach ( $post_ids as $post_id ) {
+			$master_term->associate( $object_type, $post_id );
+		}
+
+		EventLog::log(
+			_t( 'Category %s has been renamed to %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
+		);
 	}
 }
 
