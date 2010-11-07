@@ -113,7 +113,7 @@ class SimpleCategories extends Plugin
 
 			$parent_term = $category_term->parent();
 			if ( !$parent_term ) {
-				$parent_term_display = '';
+				$parent_term_display = _t( 'none', 'simplecategories' );
 			}
 			else {
 				$parent_term_display = $parent_term->term_display;
@@ -450,16 +450,29 @@ Utils::debug( $form->category->value, $current_term->term_display );
 		$post_ids = array();
 		$names = array();
 
-// if it's a rename, and the other doesn't exist, just change term->term_display, term->term; update();
-// http://drunkenmonkey.org/irc/habari/2010-11-06\#T05-26-07
+		// get the term to be renamed
+		$term = $vocabulary->get_term( $category );
 
+		// get the master term
+		$master_term = $vocabulary->get_term( $master );
 
-		// get array of existing tags first to make sure we don't conflict with a new master tag
-// 		foreach ( $tags as $tag ) {
+		// check if it already exists
+		if ( !isset( $master_term->term ) ) {
+			// it didn't exist, so we assume it's text and create it
+			$term->term_display = $master;
+			$term->term = $master;
+			$term->update();
+			// that's it, we're done.
+			EventLog::log(
+				_t( 'Category %s has been renamed to %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
+			);
+		}
+		else {
+/*			// get the posts the category is already on so we don't duplicate them
+			$master_ids = $master_term->objects( $object_type );
+
 
 			$posts = array();
-			$term = $vocabulary->get_term( $category );
-
 			// get all the post ID's categorized with this category
 			$posts = $term->objects( $object_type );
 
@@ -474,38 +487,22 @@ Utils::debug( $form->category->value, $current_term->term_display );
 // forget that, children can remain if it's not a merge
 				$vocabulary->delete_term( $term->id );
 			}
-// 		}
+			if ( count( $post_ids ) > 0 ) {
+				// only try and add the master category to posts it's not already on
+				$post_ids = array_diff( $post_ids, $master_ids );
+			}
+			else {
+				$post_ids = $master_ids;
+			}
+			// link the master category to each distinct post we removed categories from
+			foreach ( $post_ids as $post_id ) {
+				$master_term->associate( $object_type, $post_id );
+			}
 
-		// get the master term
-		$master_term = $vocabulary->get_term( $master );
-
-		if ( !isset( $master_term->term ) ) {
-			// it didn't exist, so we assume it's text and create it
-			$master_term = $vocabulary->add_term( $master );
-
-			$master_ids = array();
-		}
-		else {
-			// get the posts the category is already on so we don't duplicate them
-			$master_ids = $master_term->objects( $object_type );
-
-		}
-
-		if ( count( $post_ids ) > 0 ) {
-			// only try and add the master category to posts it's not already on
-			$post_ids = array_diff( $post_ids, $master_ids );
-		}
-		else {
-			$post_ids = $master_ids;
-		}
-		// link the master category to each distinct post we removed categories from
-		foreach ( $post_ids as $post_id ) {
-			$master_term->associate( $object_type, $post_id );
-		}
-
-		EventLog::log(
-			_t( 'Category %s has been renamed to %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
-		);
+			EventLog::log(
+				_t( 'Category %s has been renamed to %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
+			);
+*/		}
 	}
 }
 
