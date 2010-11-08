@@ -193,7 +193,6 @@ class SimpleCategories extends Plugin
 				}
 
 			if ( $form->category->value !== $current_term->term_display ) {
-Utils::debug( $form->category->value, $current_term->term_display );
 			SimpleCategories::rename( $form->category->value, $current_term->term_display );
 				// If the category has been renamed, modify the term}
 				}
@@ -416,7 +415,6 @@ Utils::debug( $form->category->value, $current_term->term_display );
 		$vocabulary = Vocabulary::get( self::$vocabulary );
 		// should there be a Plugins::act( 'category_delete_before' ...?
 		$term = $vocabulary->get_term( $category );
-// Utils::debug( $term );
 		if ( !$term ) {
 			return false; // no match for category
 		}
@@ -445,9 +443,6 @@ Utils::debug( $form->category->value, $current_term->term_display );
 		$vocabulary = Vocabulary::get( self::$vocabulary );
 		$type_id = Vocabulary::object_type_id( $object_type );
 
-		$post_ids = array();
-		$names = array();
-
 		// get the term to be renamed
 		$term = $vocabulary->get_term( $category );
 
@@ -466,7 +461,22 @@ Utils::debug( $form->category->value, $current_term->term_display );
 			);
 		}
 		else {
-/*			// get the posts the category is already on so we don't duplicate them
+			if( ! $master_term->is_descendant_of( $term ) ) {
+
+			$post_ids = array();
+			$posts = array();
+
+/*
+// grab the posts categorized $term AND NOT $master, something like a Posts::get with  'vocabulary' => array( 'any' => array( $term ), 'not' => array( $master ) )
+
+// associate them with $master.
+
+// move $term's children over to $master
+
+// delete $term
+
+// get rid of all the old stuff below that doesn't get used.
+			// get the posts the category is already on so we don't duplicate them
 			$master_ids = $master_term->objects( $object_type );
 
 
@@ -479,12 +489,6 @@ Utils::debug( $form->category->value, $current_term->term_display );
 				$post_ids = array_merge( $post_ids, $posts );
 			}
 
-			$names[] = $category;
-			if ( $category != $master ) {
-// Should probably do something about the children of the term about to die
-// forget that, children can remain if it's not a merge
-				$vocabulary->delete_term( $term->id );
-			}
 			if ( count( $post_ids ) > 0 ) {
 				// only try and add the master category to posts it's not already on
 				$post_ids = array_diff( $post_ids, $master_ids );
@@ -497,10 +501,16 @@ Utils::debug( $form->category->value, $current_term->term_display );
 				$master_term->associate( $object_type, $post_id );
 			}
 
+			$vocabulary->delete_term( $term->id );
+
 			EventLog::log(
-				_t( 'Category %s has been renamed to %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
-			);
-*/		}
+				_t( 'Category %s has been merged into %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
+			); */
+			}
+			else {
+				Session::notice( _t( 'Cannot merge %1$s into %2$s, since %2$s is a descendant of %1$s', array( $term, $master, ), 'shelves' ) );
+			}
+		}
 	}
 }
 
