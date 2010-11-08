@@ -46,10 +46,8 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_plugin_deactivation( $file )
 	{
-		if ( Plugins::id_from_file( $file ) == Plugins::id_from_file(__FILE__) ) {
-			// delete default access token
-			ACL::destroy_token( 'manage_categories' );
-		}
+		// delete default access token
+		ACL::destroy_token( 'manage_categories' );
 	}
 
 	/**
