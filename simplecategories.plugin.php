@@ -270,14 +270,6 @@ class SimpleCategories extends Plugin
 		}
 	}
 
-	/**
-	 * Enable update notices to be sent using the Habari beacon
-	 **/
-	public function action_update_check()
-	{
-		Update::add( 'SimpleCategories', '379220dc-b464-4ea6-92aa-9086a521db2c',$this->info->version );
-	}
-
 	/** 
 	 * return an array of categories, having been cleaned up a bit. Taken from post.php r3907
 	 * @param String $categories Text from the Category text input
