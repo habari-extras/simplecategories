@@ -453,51 +453,32 @@ class SimpleCategories extends Plugin
 			);
 		}
 		else {
-			if( ! $master_term->is_descendant_of( $term ) ) {
+			if ( ! $master_term->is_descendant_of( $term ) ) {
 
-			$post_ids = array();
-			$posts = array();
+				$posts = array();
+				$posts = Posts::get( array(
+					'vocabulary' => array( 'any' => array( $term ), 'not' => array( $master_term ) ),
+					'nolimit' => true,
+				) );
 
-/*
-// grab the posts categorized $term AND NOT $master, something like a Posts::get with  'vocabulary' => array( 'any' => array( $term ), 'not' => array( $master ) )
+				// categorize all the $category Posts as $master
+				foreach ( $posts as $post ) {
+	//				$vocabulary->set_object_terms( 'post', $post->id, $master );
+					$master_term->associate( 'post', $post->id );
+				}
 
-// associate them with $master.
+				// move the old $term's children over to $master_term
+				foreach ( $term->children() as $child ) {
+					// is this needed?
+	//				$child = $vocabulary->get_term( $child->id );
+					$vocabulary->move_term( $child, $master_term );
+				}
 
-// move $term's children over to $master
-
-// delete $term
-
-// get rid of all the old stuff below that doesn't get used.
-			// get the posts the category is already on so we don't duplicate them
-			$master_ids = $master_term->objects( $object_type );
-
-
-			$posts = array();
-			// get all the post ID's categorized with this category
-			$posts = $term->objects( $object_type );
-
-			if ( count( $posts ) > 0 ) {
-				// merge the current post ids into the list of all the post_ids we need for the new tag
-				$post_ids = array_merge( $post_ids, $posts );
-			}
-
-			if ( count( $post_ids ) > 0 ) {
-				// only try and add the master category to posts it's not already on
-				$post_ids = array_diff( $post_ids, $master_ids );
-			}
-			else {
-				$post_ids = $master_ids;
-			}
-			// link the master category to each distinct post we removed categories from
-			foreach ( $post_ids as $post_id ) {
-				$master_term->associate( $object_type, $post_id );
-			}
-
-			$vocabulary->delete_term( $term->id );
-
-			EventLog::log(
-				_t( 'Category %s has been merged into %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
-			); */
+				// delete the old $term and all its associations
+				self::delete_category( $term->id );
+				EventLog::log(
+					_t( 'Category %s has been merged into %s.', array( $category, $master ), 'simplecategories' ), 'info', 'category', 'simplecategories'
+				);
 			}
 			else {
 				Session::notice( _t( 'Cannot merge %1$s into %2$s, since %2$s is a descendant of %1$s', array( $term, $master, ), 'shelves' ) );
