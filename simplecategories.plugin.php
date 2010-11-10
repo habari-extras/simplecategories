@@ -326,11 +326,11 @@ class SimpleCategories extends Plugin
 	public function filter_template_where_filters( $filters ) {
 		$vars = Controller::get_handler_vars();
 		if( isset( $vars['category_slug'] ) ) {
-			$term = Term::get($this->vocabulary, $vars['category_slug']);
+			$term = $this->vocabulary->get_term( $vars['category_slug'] );
 			if ( $term instanceof Term ) {
 				$terms = (array)$term->descendants();
-				$terms = array_map(create_function('$a', 'return $a->term;'), $terms);
-				array_push($terms, $vars['category_slug']);
+				$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
+				array_push( $terms, $vars['category_slug'] );
 				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( self::$vocabulary . ':term' => $terms ) );
 			}
 		}
