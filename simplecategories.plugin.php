@@ -76,68 +76,72 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_admin_theme_get_categories( AdminHandler $handler, Theme $theme )
 	{
+		$category_term = false;
+		$parent_term = false;
+		$parent_term_display = _t( 'None', 'simplecategories' );
 
-		$all_terms = array();
-		$all_terms = $this->vocabulary->get_tree();
-
-		if (!isset( $_GET[ 'category' ] ) ) { // create new category form
-
-			$form = new FormUI( 'category-new' );
-			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
-
-			$create_fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category', 'simplecategories' ) );
-			$category = $create_fieldset->append( 'text', 'category', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
-			$category->add_validator( 'validate_required' );
-			$category->class = 'pct30';
-			
-			$parent = $create_fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent', 'simplecategories' ), $this->vocabulary->get_options(), 'optionscontrol_select' );
-			$parent->class = 'pct50';
-
-			$save_button = $create_fieldset->append( 'submit', 'save', _t( 'Create', 'simplecategories' ) );
-			$save_button->class = 'pct20 last';
-
-			$cancelbtn = $form->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
-
-			$form->on_success( array( $this, 'formui_create_submit' ) );
-
- 		} 
-		else { // edit form for existing category
-
-			$which_category = $_GET[ 'category' ];
-			$category_term = $this->vocabulary->get_term( $which_category );
-			if ( !$category_term ) {
-				exit;
+		if( isset( $_GET['action'] ) ) {
+			switch( $_GET['action'] ) {
+				case 'delete':
+					$term = $_GET['category'];
+					$this->delete_category( $term );
+					break;
+				case 'edit':
+					$category_term = $this->vocabulary->get_term( (int)$_GET['category'] );
+					if ( $category_term ) {
+						$parent_term = $category_term->parent();
+						if ( $parent_term ) {
+							$parent_term_display = $parent_term->term_display;
+						}
+					}
+					break;
 			}
+		}
 
-			$parent_term = $category_term->parent();
-			if ( !$parent_term ) {
-				$parent_term_display = _t( 'none', 'simplecategories' );
-			}
-			else {
-				$parent_term_display = $parent_term->term_display;
-			}
+		$options = $this->vocabulary->get_options();
+		$options[0] = 'None';
 
-			$form = new FormUI( 'category-edit' );
+		$form = new FormUI( 'simplecategories' );
+		if ( $category_term ) {
 			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories&category=' . $_GET[ 'category' ] ) );
 			$category_id = $form->append( 'hidden', 'category_id' )->value = $category_term->id; // send this id, for seeing what has changed
-			$edit_fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category_term->term_display ) );
-			$category = $edit_fieldset->append( 'text', 'category', 'null:null', _t( 'Rename Category', 'simplecategories' ), 'formcontrol_text' );
-			$category->value = $category_term->term_display;
-			$category->add_validator( 'validate_required' );
-			$category->class = 'pct30';
+		}
+		else {
+			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
+		}
+		if( $category_term ) {
+			$fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category_term->term_display ) );
+		}
+		else {
+			$fieldset = $form->append( 'fieldset', '', _t( 'Create a new Category', 'simplecategories' ) );
+		}
 
-			$parent = $edit_fieldset->append( 'select', 'parent', 'null:null', _t( 'Current Parent: <b>%1$s</b> Change Parent to:', array($parent_term_display), 'simplecategories'), $this->vocabulary->get_options(), 'optionscontrol_select' );
-			$parent->class = 'pct50';
-			$parent->value = ( !$parent_term ? '': $parent_term->id ); // select the current parent
+		$category = $fieldset->append( 'text', 'category', 'null:null', _t( 'Category', 'simplecategories' ), 'formcontrol_text' );
+		$category->value = !$category_term ? '' : $category_term->term_display;
+		$category->add_validator( 'validate_required' );
+		$category->class = 'pct30';
 
-			$save_button = $edit_fieldset->append( 'submit', 'save', _t( 'Edit', 'simplecategories' ) );
-			$save_button->class = 'pct20 last';
+		$parent = $fieldset->append( 'select', 'parent', 'null:null', _t( 'Parent: <b>%1$s</b> Change Parent to:', array($parent_term_display), 'simplecategories'), $options, 'optionscontrol_select' );
+		$parent->value = ( !$parent_term ? '': $parent_term->id ); // select the current parent
+		$parent->class = 'pct50';
 
-			$cancel_button = $form->append( 'submit', 'cancel_btn', _t( 'Cancel', 'simplecategories' ) );
-	
+		$save_button = $fieldset->append( 'submit', 'save', _t( 'Save', 'simplecategories' ) );
+//		$save_button->class = 'pct20 last';
+		$save_button->class = 'pct20';
+
+//		$cancelbtn = $fieldset->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
+//		$cancelbtn->action = URL::get( 'admin', 'page=categories' );
+		$cancelbtn = $form->append( 'static', 'btn',
+			'<p id="btn" ><a class="button dashboardinfo" href="' . URL::get( 'admin', 'page=categories' ) . '">' . _t( 'Cancel', 'simplecategories' ) . "</a></p>\n" );
+
+		if ( $category_term ) { //editing an existing category
 			$form->on_success( array( $this, 'formui_edit_submit' ) );
 		}
-		$theme->form = $form->get();
+		else { //new category
+			$form->on_success( array( $this, 'formui_create_submit' ) );
+		}
+
+		$theme->form = $form;
 
 		$theme->display( 'categories' );
 		// End everything
@@ -146,26 +150,15 @@ class SimpleCategories extends Plugin
 
 	public function formui_create_submit( FormUI $form )
 	{
-		if( isset( $form->category ) && ( $form->category->value <> '' ) ) {
+		// time to create the new term.
+		$parent = $this->vocabulary->get_term( (int)$form->parent->value );
+		$new_term = $form->category->value;
 
-			// time to create the new term.
-			$form_parent = $form->parent->value;
-			$new_term = $form->category->value;
-
-			// If a new term has been set, add it to the categories vocabulary
-			if ( '' != $form_parent ) {
-				// Make sure the parent term exists.
-				$parent_term = $this->vocabulary->get_term( $form_parent );
-					if ( null == $parent_term ) {
-					// There's no term for the parent, add it as a top-level term
-					$parent_term = $this->vocabulary->add_term( $form_parent );
-				}
-
-				$category_term = $this->vocabulary->add_term( $new_term, $parent_term );
-			}
-			else {
-				$category_term = $this->vocabulary->add_term( $new_term );
-			}
+		if ( $parent ) {
+			$this->vocabulary->add_term( $new_term, $parent );
+		}
+		else {
+			$this->vocabulary->add_term( $new_term );
 		}
 		// redirect to the page to update the form
 		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' ) ), true );
@@ -175,26 +168,23 @@ class SimpleCategories extends Plugin
 	{
 		if( isset( $form->category ) && ( $form->category->value <> '' ) ) {
 			if( isset( $form->category_id ) ) {
-				$current_term = $this->vocabulary->get_term( $form->category_id->value );
+				$current_term = $this->vocabulary->get_term( (int)$form->category_id->value );
 
 				// If there's a changed parent, change the parent.
 				$cur_parent = $current_term->parent();
-				$new_parent = $this->vocabulary->get_term( $form->parent->value );
+				$new_parent = $this->vocabulary->get_term( (int)$form->parent->value );
 
-				if ( $cur_parent ) {
-					if ( $cur_parent->id <> $form->parent->value ) {
-						// change the parent to the new ID.
-						$this->vocabulary->move_term( $current_term, $new_parent );
-					}
-				}
-				else 	{
-					// cur_parent is false, should mean $current_term is a root element
+				if ( $new_parent ) {
 					$this->vocabulary->move_term( $current_term, $new_parent );
 				}
+				else {
+					$this->vocabulary->move_term( $current_term );
+				}
 
-			if ( $form->category->value !== $current_term->term_display ) {
-			SimpleCategories::rename( $form->category->value, $current_term->term_display );
-				// If the category has been renamed, modify the term}
+				if ( $form->category->value !== $current_term->term_display ) {
+//					SimpleCategories::rename( $form->category->value, $current_term->term_display );
+					$this->vocabulary->merge( $form->category->value, array( $current_term->term_display ) );
+					// If the category has been renamed, modify the term}
 				}
 			}
 		}
@@ -265,7 +255,8 @@ class SimpleCategories extends Plugin
 	{
 		if ( $post->content_type == Post::type( self::$content_type ) ) {
 			$categories = array();
-			$categories = $this->parse_categories( $form->categories->value );
+//			$categories = $this->parse_categories( $form->categories->value );
+			$categories = Terms::parse( $form->categories->value, 'Term', $this->vocabulary );
 			$this->vocabulary->set_object_terms( 'post', $post->id, $categories );
 		}
 	}
@@ -306,7 +297,8 @@ class SimpleCategories extends Plugin
 	 **/
 	public function filter_default_rewrite_rules( $rules ) {
 		$rule = array( 	'name' => 'display_entries_by_category', 
-				'parse_regex' => '%^category/(?P<category_slug>[^/]*)(?:/page/(?P<page>\d+))?/?$%i', 
+//				'parse_regex' => '%^category/(?P<category_slug>[^/]*)(?:/page/(?P<page>\d+))?/?$%i',
+				'parse_regex' => '%^category/(?P<category_slug>.*)(?:/page/(?P<page>\d+))?/?$%i',
 				'build_str' => 'category/{$category_slug}(/page/{$page})', 
 				'handler' => 'UserThemeHandler', 
 				'action' => 'display_entries_by_category', 
@@ -326,12 +318,18 @@ class SimpleCategories extends Plugin
 	public function filter_template_where_filters( $filters ) {
 		$vars = Controller::get_handler_vars();
 		if( isset( $vars['category_slug'] ) ) {
-			$term = $this->vocabulary->get_term( $vars['category_slug'] );
+			$labels = explode( '/', $vars['category_slug'] );
+			$level = count( $labels ) - 1;
+			$term = $this->get_term( $labels, $level );
+
+//			$term = $this->vocabulary->get_term( $vars['category_slug'] );
 			if ( $term instanceof Term ) {
 				$terms = (array)$term->descendants();
-				$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
-				array_push( $terms, $vars['category_slug'] );
-				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( self::$vocabulary . ':term' => $terms ) );
+//				$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
+//				array_push( $terms, $vars['category_slug'] );
+//				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( self::$vocabulary . ':term' => $terms ) );
+				array_push( $terms, $term );
+				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( 'any' => $terms ) );
 			}
 		}
 		return $filters;
@@ -402,16 +400,15 @@ class SimpleCategories extends Plugin
 	 * function delete_category
 	 * Deletes an existing category and all relations to it.
 	 **/
-	public static function delete_category( $category = '' )
+	private function delete_category( $category  )
 	{
-		$vocabulary = Vocabulary::get( self::$vocabulary );
 		// should there be a Plugins::act( 'category_delete_before' ...?
-		$term = $vocabulary->get_term( $category );
+		$term = $this->vocabulary->get_term( (int)$category );
 		if ( !$term ) {
 			return false; // no match for category
 		}
 
-		$result = $vocabulary->delete_term( $term );
+		$result = $this->vocabulary->delete_term( $term );
 
 		if ( $result ) {
 			EventLog::log( sprintf( _t( 'Category \'%1$s\' deleted.' ), $category ), 'info', 'content', 'simplecategories' );
@@ -485,6 +482,65 @@ class SimpleCategories extends Plugin
 			}
 		}
 	}
+
+	protected function get_child( $root, $term ) {
+		$params = array( 'vocab' => $this->vocabulary->id,
+			'left' => $this->mptt_left,
+			'right' => $this->mptt_right,
+			'label' => $term,
+		);
+		/**
+		 * If we INNER JOIN the terms table with itself on ALL the descendants of our term,
+		 * then descendants one level down are listed once, two levels down are listed twice,
+		 * etc. If we return only those terms which appear once, we get immediate children.
+		 * ORDER BY NULL to avoid the MySQL filesort.
+		 */
+		$query = <<<SQL
+SELECT child.term as term,
+	child.term_display as term_display,
+	child.mptt_left as mptt_left,
+	child.mptt_right as mptt_right,
+	child.vocabulary_id as vocabulary_id
+FROM {terms} as parent
+INNER JOIN {terms} as child
+	ON child.mptt_left BETWEEN parent.mptt_left AND parent.mptt_right
+	AND child.vocabulary_id = parent.vocabulary_id
+WHERE parent.mptt_left > :left AND parent.mptt_right < :right
+	AND parent.vocabulary_id = :vocab
+	AND child.term = :label
+GROUP BY child.term
+HAVING COUNT(child.term)=1
+ORDER BY NULL
+SQL;
+		return DB::get_row( $query, $params, 'Term' );
+
+	}
+	protected function get_term( $labels, $level )
+	{
+		$root_term = false;
+		$root = $labels[0];
+		$roots = $this->vocabulary->get_root_terms();
+		foreach( $roots as $term ) {
+			if ( $root == $term->term ) {
+				$root_term = $term;
+				break;
+			}
+		}
+
+
+		for( $i = 1; $i <= $level; $i++ ) {
+			$term = $labels[$i];
+			$roots = $root_term->children( $root_term );
+			foreach( $roots as $cur ) {
+				if ( $cur->term == $term ) {
+					$root_term = $cur;
+					break;
+				}
+			}
+		}
+		return $root_term;
+
+	}
 }
 
 class SimpleCategoriesFormat extends Format {
@@ -518,7 +574,6 @@ class SimpleCategoriesFormat extends Format {
 	public static function link_cat( $a, $b ) {
 		return '<a href="' . URL::get( "display_entries_by_category", array( "category_slug" => $b ) ) . "\" rel=\"category\">$a</a>";
 	}
-
 }
 
 ?>

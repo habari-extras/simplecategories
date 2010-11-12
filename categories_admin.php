@@ -1,25 +1,8 @@
 <?php $theme->display('header');?>
 
-<?php
-
-	if (isset( $_GET['action'] ) and User::identify()->can( 'manage_categories' ) ) {
-		switch( $_GET[ 'action' ] ) {
-			case "delete":
-				SimpleCategories::delete_category( $_GET[ 'category' ] );
-				break;
-			case "edit":
-				// actually, probably don't need to even do this.
-				break;
-			default:
-				// shouldn't come to this.
-		}
-		// ok, token checked, but is it overkill?
-// 		Utils::debug( $_GET );
-	}	
-?>
 	<div class="container">
 
-<?php	echo $form; ?>
+<?php	$form->out(); ?>
 
 	</div>
 
@@ -37,18 +20,18 @@
 			}
 			$pad = count($right)*30;
 			$titlelink = sprintf(
-				'<a href="%s" title="%s">%s</a>',
+				'<a href="%s" title="%s">%s - %d</a>',
 				URL::get( 'admin', array( 'page' => 'posts', 'search' => 'category:' . $category->term ) ),
 				_t( "Manage content categorized '%s'", array($category->term_display), 'simplecategories' ),
-				$category->term_display
+				$category->term_display, $category->id
 			);
 
 			$dogs_eat_cats = _t('Contains %d posts.', array( Posts::get(array ('vocabulary'=> array( 'categories:term' => $category->term ), 'count' => 'term' ) ) ), 'simplecategories' );
 
 			// debugging
 			$titlelink .= "<h4>{$category->mptt_left} :: {$category->mptt_right}</h4>";
-			$dropbutton = '<ul class="dropbutton"><li><a href="'. URL::get( 'admin', array( 'page' => 'categories', 'action' => 'edit', 'category' => $category->term )  ) . '" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' .
-					_t( "Edit" ) . '</a></li><li><a href="' . URL::get( 'admin', array( 'page' => 'categories', 'action' => 'delete', 'category' => $category->term ) ) . '" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';
+			$dropbutton = '<ul class="dropbutton"><li><a href="'. URL::get( 'admin', array( 'page' => 'categories', 'action' => 'edit', 'category' => $category->id )  ) . '" title="' . _t( "Rename or move '{$category->term_display}'" ) . '">' .
+					_t( "Edit" ) . '</a></li><li><a href="' . URL::get( 'admin', array( 'page' => 'categories', 'action' => 'delete', 'category' => $category->id ) ) . '" title="' . _t( "Delete '{$category->term_display}'" ) . '">' . _t( "Delete" ) . '</a></li></ul>';
 			echo "\n<div class='item plugin clear' style='border-left: {$pad}px solid #e9e9e9; border-color:#e9e9e9;'><div class='head'>";
 			echo "\n$titlelink $dropbutton\n</div><p>$dogs_eat_cats</p></div>";
 
