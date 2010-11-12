@@ -87,7 +87,8 @@ class SimpleCategories extends Plugin
 					$this->delete_category( $term );
 					break;
 				case 'edit':
-					$category_term = $this->vocabulary->get_term( (int)$_GET['category'] );
+					$term = $_GET['category'];
+					$category_term = $this->vocabulary->get_term( (int)$term );
 					if ( $category_term ) {
 						$parent_term = $category_term->parent();
 						if ( $parent_term ) {
@@ -98,18 +99,21 @@ class SimpleCategories extends Plugin
 			}
 		}
 
-		$options = $this->vocabulary->get_options();
-		$options[0] = 'None';
+		if ( isset( $GET['category'] ) ) {
+			$term = $_GET['category'];
+			$category_term = $this->vocabulary->get_term( (int)$term );
+			if ( $category_term ) {
+				$parent_term = $category_term->parent();
+				if ( $parent_term ) {
+					$parent_term_display = $parent_term->term_display;
+				}
+			}
+		}
 
+		$options = array( 0 => _t( '(none)', 'simplecategories') ) + $this->vocabulary->get_options();
 		$form = new FormUI( 'simplecategories' );
 		if ( $category_term ) {
-			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories&category=' . $_GET[ 'category' ] ) );
 			$category_id = $form->append( 'hidden', 'category_id' )->value = $category_term->id; // send this id, for seeing what has changed
-		}
-		else {
-			$form->set_option( 'form_action', URL::get( 'admin', 'page=categories' ) );
-		}
-		if( $category_term ) {
 			$fieldset = $form->append( 'fieldset', '', sprintf( _t( 'Edit Category: <b>%1$s</b>' , 'simplecategories' ), $category_term->term_display ) );
 		}
 		else {
@@ -126,8 +130,7 @@ class SimpleCategories extends Plugin
 		$parent->class = 'pct50';
 
 		$save_button = $fieldset->append( 'submit', 'save', _t( 'Save', 'simplecategories' ) );
-//		$save_button->class = 'pct20 last';
-		$save_button->class = 'pct20';
+		$save_button->class = 'pct20 last';
 
 //		$cancelbtn = $fieldset->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
 //		$cancelbtn->action = URL::get( 'admin', 'page=categories' );
@@ -325,9 +328,6 @@ class SimpleCategories extends Plugin
 //			$term = $this->vocabulary->get_term( $vars['category_slug'] );
 			if ( $term instanceof Term ) {
 				$terms = (array)$term->descendants();
-//				$terms = array_map( create_function( '$a', 'return $a->term;' ), $terms );
-//				array_push( $terms, $vars['category_slug'] );
-//				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( self::$vocabulary . ':term' => $terms ) );
 				array_push( $terms, $term );
 				$filters['vocabulary'] = array_merge( $filters['vocabulary'], array( 'any' => $terms ) );
 			}
@@ -483,38 +483,6 @@ class SimpleCategories extends Plugin
 		}
 	}
 
-	protected function get_child( $root, $term ) {
-		$params = array( 'vocab' => $this->vocabulary->id,
-			'left' => $this->mptt_left,
-			'right' => $this->mptt_right,
-			'label' => $term,
-		);
-		/**
-		 * If we INNER JOIN the terms table with itself on ALL the descendants of our term,
-		 * then descendants one level down are listed once, two levels down are listed twice,
-		 * etc. If we return only those terms which appear once, we get immediate children.
-		 * ORDER BY NULL to avoid the MySQL filesort.
-		 */
-		$query = <<<SQL
-SELECT child.term as term,
-	child.term_display as term_display,
-	child.mptt_left as mptt_left,
-	child.mptt_right as mptt_right,
-	child.vocabulary_id as vocabulary_id
-FROM {terms} as parent
-INNER JOIN {terms} as child
-	ON child.mptt_left BETWEEN parent.mptt_left AND parent.mptt_right
-	AND child.vocabulary_id = parent.vocabulary_id
-WHERE parent.mptt_left > :left AND parent.mptt_right < :right
-	AND parent.vocabulary_id = :vocab
-	AND child.term = :label
-GROUP BY child.term
-HAVING COUNT(child.term)=1
-ORDER BY NULL
-SQL;
-		return DB::get_row( $query, $params, 'Term' );
-
-	}
 	protected function get_term( $labels, $level )
 	{
 		$root_term = false;
