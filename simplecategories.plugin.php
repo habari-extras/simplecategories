@@ -132,10 +132,10 @@ class SimpleCategories extends Plugin
 		$save_button = $fieldset->append( 'submit', 'save', _t( 'Save', 'simplecategories' ) );
 		$save_button->class = 'pct20 last';
 
-//		$cancelbtn = $fieldset->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
-//		$cancelbtn->action = URL::get( 'admin', 'page=categories' );
-		$cancelbtn = $form->append( 'static', 'btn',
-			'<p id="btn" ><a class="button dashboardinfo" href="' . URL::get( 'admin', 'page=categories' ) . '">' . _t( 'Cancel', 'simplecategories' ) . "</a></p>\n" );
+//		$cancelbtn = $form->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
+//		$cancelbtn->id = 'btn';
+//		$cancelbtn->onclick = 'habari_ajax.get("' . URL::get( 'admin', 'page=categories' ) . '")' ;
+		$cancelbtn = $form->append( 'static', 'btn', '<p id="btn" ><a class="button dashboardinfo" href="' . URL::get( 'admin', 'page=categories' ) . '">' . _t( 'Cancel', 'simplecategories' ) . "</a></p>\n" );
 
 		if ( $category_term ) { //editing an existing category
 			$form->on_success( array( $this, 'formui_edit_submit' ) );
@@ -146,6 +146,7 @@ class SimpleCategories extends Plugin
 
 		$theme->form = $form;
 
+		$theme->all_categories = $this->vocabulary->get_tree();
 		$theme->display( 'categories' );
 		// End everything
 		exit;
@@ -509,6 +510,15 @@ class SimpleCategories extends Plugin
 		return $root_term;
 
 	}
+
+	public function filter_posts_search_to_get( $arguments, $flag, $value, $match, $search_string )
+	{
+		if ( 'category' == $flag ) {
+			$arguments['vocabulary'][$this->vocabulary->name . ':term_display'][] = $value;
+		}
+		return $arguments;
+	}
+
 }
 
 class SimpleCategoriesFormat extends Format {

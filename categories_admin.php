@@ -10,8 +10,6 @@
 <?php
 	// this should be in the plugin, not on this page.
 
-	$all_categories = array();
-	$all_categories = Vocabulary::get( 'categories' )->get_tree();
 	if ( count( $all_categories) > 0 ) {
 		$right = array();
 		foreach ( $all_categories as $category ) {
@@ -26,7 +24,7 @@
 				$category->term_display, $category->id
 			);
 
-			$dogs_eat_cats = _t('Contains %d posts.', array( Posts::get(array ('vocabulary'=> array( 'categories:term' => $category->term ), 'count' => 'term' ) ) ), 'simplecategories' );
+			$dogs_eat_cats = _t('Contains %d posts.', array( Posts::get(array ('vocabulary'=> array( 'any' => array( $category ) ), 'count' => 'term' ) ) ), 'simplecategories' );
 
 			// debugging
 			$titlelink .= "<h4>{$category->mptt_left} :: {$category->mptt_right}</h4>";
