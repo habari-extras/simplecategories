@@ -265,36 +265,6 @@ class SimpleCategories extends Plugin
 		}
 	}
 
-	/** 
-	 * return an array of categories, having been cleaned up a bit. Taken from post.php r3907
-	 * @param String $categories Text from the Category text input
-	 */
-	public static function parse_categories( $categories )
-	{
-		if ( is_string( $categories ) ) {
-			if ( '' === $categories ) {
-				return array();
-			}
-			// just as dirrty as it is in post.php ;)
-			$rez = array( '\\"'=>':__unlikely_quote__:', '\\\''=>':__unlikely_apos__:' );
-			$zer = array( ':__unlikely_quote__:'=>'"', ':__unlikely_apos__:'=>"'" );
-			// escape
-			$catstr = str_replace( array_keys( $rez ), $rez, $categories );
-			// match-o-matic
-			preg_match_all( '/((("|((?<= )|^)\')\\S([^\\3]*?)\\3((?=[\\W])|$))|[^,])+/', $catstr, $matches );
-			// cleanup
-			$categories = array_map( 'trim', $matches[0] );
-			$categories = preg_replace( array_fill( 0, count( $categories ), '/^(["\'])(((?!").)+)(\\1)$/'), '$2', $categories );
-			// unescape
-			$categories = str_replace( array_keys( $zer ), $zer, $categories );
-			// just as hooray as it is in post.php
-			return $categories;
-		}
-		elseif ( is_array( $categories ) ) {
-			return $categories;
-		}
-	}
-
 	/**
 	 * Add a category rewrite rule
 	 * @param Array $rules Current rewrite rules
