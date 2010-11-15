@@ -18,10 +18,10 @@
 			}
 			$pad = count($right)*30;
 			$titlelink = sprintf(
-				'<a href="%s" title="%s">%s - %d</a>',
-				URL::get( 'admin', array( 'page' => 'posts', 'search' => 'category:' . $category->term ) ),
+				'<a href="%s" title="%s">%s</a>',
+				URL::get( 'admin', array( 'page' => 'posts', 'search' => 'category:' . $category->tag_text_searchable ) ),
 				_t( "Manage content categorized '%s'", array($category->term_display), 'simplecategories' ),
-				$category->term_display, $category->id
+				$category->term_display
 			);
 
 			$dogs_eat_cats = _t('Contains %d posts.', array( Posts::get(array ('vocabulary'=> array( 'any' => array( $category ) ), 'count' => 'term' ) ) ), 'simplecategories' );
