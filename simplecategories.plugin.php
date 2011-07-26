@@ -24,20 +24,18 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_plugin_activation( $file )
 	{
-		if ( Plugins::id_from_file( $file ) == Plugins::id_from_file(__FILE__) ) {
-			$params = array(
-				'name' => self::$vocabulary,
-				'description' => 'A vocabulary for describing Categories',
-				'features' => array( 'multiple', 'hierarchical' )
-			);
+		$params = array(
+		'name' => self::$vocabulary,
+			'description' => 'A vocabulary for describing Categories',
+			'features' => array( 'multiple', 'hierarchical' )
+		);
 
-			Vocabulary::create( $params );
+		Vocabulary::create( $params );
 
-			// create default access token
-			ACL::create_token( 'manage_categories', _t( 'Manage categories' ), 'Administration', false );
-			$group = UserGroup::get_by_name( 'admin' );
-			$group->grant( 'manage_categories' );
-		}
+		// create default access token
+		ACL::create_token( 'manage_categories', _t( 'Manage categories' ), 'Administration', false );
+		$group = UserGroup::get_by_name( 'admin' );
+		$group->grant( 'manage_categories' );
 	}
 
 	/**
@@ -201,11 +199,11 @@ class SimpleCategories extends Plugin
 	 **/
 	public function alias()
 	{
-		return array( 
-			'action_admin_theme_get_categories'=> 'action_admin_theme_post_categories' 
+		return array(
+			'action_admin_theme_get_categories'=> 'action_admin_theme_post_categories'
 		);
 	}
-	
+
 	/**
 	 * Add menu item above 'dashboard'
 	 **/
@@ -219,13 +217,13 @@ class SimpleCategories extends Plugin
 			'selected' => false,
 			'access' => array( 'manage_categories' => true )
 		) );
-		
+
 		$slice_point = array_search( 'dashboard', array_keys( $menu ) ); // Element will be inserted before "groups"
 		$pre_slice = array_slice( $menu, 0, $slice_point );
 		$post_slice = array_slice( $menu, $slice_point );
-		
+
 		$menu = array_merge( $pre_slice, $item_menu, $post_slice );
-		
+
 		return $menu;
 	}
 
@@ -270,23 +268,23 @@ class SimpleCategories extends Plugin
 	 * @param Array $rules Current rewrite rules
 	 **/
 	public function filter_default_rewrite_rules( $rules ) {
-		$rule = array( 	'name' => 'display_entries_by_category', 
+		$rule = array( 	'name' => 'display_entries_by_category',
 //				'parse_regex' => '%^category/(?P<category_slug>[^/]*)(?:/page/(?P<page>\d+))?/?$%i',
 				'parse_regex' => '%^category/(?P<category_slug>.*)(?:/page/(?P<page>\d+))?/?$%i',
-				'build_str' => 'category/{$category_slug}(/page/{$page})', 
-				'handler' => 'UserThemeHandler', 
-				'action' => 'display_entries_by_category', 
-				'priority' => 5, 
-				'description' => 'Return posts matching specified category.', 
+				'build_str' => 'category/{$category_slug}(/page/{$page})',
+				'handler' => 'UserThemeHandler',
+				'action' => 'display_entries_by_category',
+				'priority' => 5,
+				'description' => 'Return posts matching specified category.',
 		);
 
-		$rules[] = $rule;	
+		$rules[] = $rule;
 		return $rules;
 	}
 
 	/**
 	 * function filter_template_where_filters
-	 * Limit the Posts::get call to categories 
+	 * Limit the Posts::get call to categories
 	 * (uses tag_slug because that's really term under the hood)
 	 **/
 	public function filter_template_where_filters( $filters ) {
