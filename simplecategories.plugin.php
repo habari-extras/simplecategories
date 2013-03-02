@@ -351,7 +351,7 @@ class SimpleCategories extends Plugin
 		$fallback = array();
 		$vars = Controller::get_handler_vars();
 		if (isset($vars['category_slug'])) {
-			$category = Categories::get($vars['category_slug']);
+			$category = SimpleCategories::get($vars['category_slug']);
 			$template_names = array();
 			array_push($template_names, str_replace('/', '.', $category->slug));
 			$parent = $category->parent();
@@ -397,7 +397,7 @@ class SimpleCategories extends Plugin
 	{
 		$labels = (array)explode( '/', $category_slug );
 		$level = count( $labels ) - 1;
-		$cat_obj = new Categories();
+		$cat_obj = new SimpleCategories();
 		return $cat_obj->get_term_from_label_array($labels, $level, $term_class);
 	}
 	

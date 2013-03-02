@@ -25,7 +25,7 @@ class Category extends Term {
 	}
 	
 	public function get_url($trail = false) {
-		return Site::get_url('habari', true) . Categories::URL_BASE . '/' . $this->slug . ($trail ? '/' : '');
+		return Site::get_url('habari', true) . SimpleCategories::URL_BASE . '/' . $this->slug . ($trail ? '/' : '');
 	}
 	
 	public function out_url($trail = false) {
