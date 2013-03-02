@@ -1,9 +1,12 @@
 <?php
 
+require_once "category_class.php";
+
 class SimpleCategories extends Plugin
 {
+	const URL_BASE = 'category';
 	private static $vocabulary = 'categories';
-	private static $content_type = 'entry';
+	private static $content_types = array('entry', 'photo');
 
 	protected $_vocabulary;
 
@@ -13,11 +16,17 @@ class SimpleCategories extends Plugin
 		switch ( $name ) {
 			case 'vocabulary':
 				if ( !isset( $this->_vocabulary ) ) {
-					$this->_vocabulary = Vocabulary::get( self::$vocabulary );
+					$this->_vocabulary = self::get_vocabulary();
 				}
 				return $this->_vocabulary;
 		}
 	}
+	
+	public static function get_vocabulary()
+	{
+		return Vocabulary::get( self::$vocabulary );
+	}
+	
 	/**
 	 * Add the category vocabulary and create the admin token
 	 *
@@ -130,9 +139,6 @@ class SimpleCategories extends Plugin
 		$save_button = $fieldset->append( 'submit', 'save', _t( 'Save', 'simplecategories' ) );
 		$save_button->class = 'pct20 last';
 
-//		$cancelbtn = $form->append( 'button', 'btn', _t( 'Cancel', 'simplecategories' ) );
-//		$cancelbtn->id = 'btn';
-//		$cancelbtn->onclick = 'habari_ajax.get("' . URL::get( 'admin', 'page=categories' ) . '")' ;
 		$cancelbtn = $form->append( 'static', 'btn', '<p id="btn" ><a class="button dashboardinfo" href="' . URL::get( 'admin', 'page=categories' ) . '">' . _t( 'Cancel', 'simplecategories' ) . "</a></p>\n" );
 
 		if ( $category_term ) { //editing an existing category
@@ -184,14 +190,13 @@ class SimpleCategories extends Plugin
 				}
 
 				if ( $form->category->value !== $current_term->term_display ) {
-//					SimpleCategories::rename( $form->category->value, $current_term->term_display );
 					$this->vocabulary->merge( $form->category->value, array( $current_term->term_display ) );
 					// If the category has been renamed, modify the term}
 				}
 			}
 		}
 		// redirect to the page to update the form
-		Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' ) ), true );
+		//Utils::redirect( URL::get( 'admin', array( 'page'=>'categories' ) ), true );
 	}
 
  	/**
@@ -232,7 +237,7 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_form_publish ( $form, $post )
 	{
-		if ( $form->content_type->value == Post::type( self::$content_type ) ) {
+		if ( self::is_category_type($form->content_type->value) ) {
 			$parent_term = null;
 			$descendants = null;
 
@@ -244,7 +249,11 @@ class SimpleCategories extends Plugin
 
 			// If this is an existing post, see if it has categories already
 			if ( 0 != $post->id ) {
-				$form->categories->value = implode( ', ', array_values( $this->get_categories( $post ) ) );
+				$category_names = array();
+				foreach ($post->categories as $category) {
+					array_unshift($category_names, $category->term_display);
+				}
+				$form->categories->value = implode(',', $category_names);
 			}
 		}
 	}
@@ -255,9 +264,8 @@ class SimpleCategories extends Plugin
 	 **/
 	public function action_publish_post( $post, $form )
 	{
-		if ( $post->content_type == Post::type( self::$content_type ) ) {
+		if ( self::is_category_type($post->content_type) ) {
 			$categories = array();
-//			$categories = $this->parse_categories( $form->categories->value );
 			$categories = Terms::parse( $form->categories->value, 'Term', $this->vocabulary );
 			$this->vocabulary->set_object_terms( 'post', $post->id, $categories );
 		}
@@ -268,18 +276,35 @@ class SimpleCategories extends Plugin
 	 * @param Array $rules Current rewrite rules
 	 **/
 	public function filter_default_rewrite_rules( $rules ) {
-		$rule = array( 	'name' => 'display_entries_by_category',
-//				'parse_regex' => '%^category/(?P<category_slug>[^/]*)(?:/page/(?P<page>\d+))?/?$%i',
-				'parse_regex' => '%^category/(?P<category_slug>.*)(?:/page/(?P<page>\d+))?/?$%i',
-				'build_str' => 'category/{$category_slug}(/page/{$page})',
+		$category_rules = array(
+			array(
+				'name' => 'display_entries_by_category',
+				'parse_regex' => '%^' . self::URL_BASE . '/(?P<category_slug>.*)(?:/page/(?P<page>\d+))?/?$%i',
+				'build_str' => self::URL_BASE . '/{$category_slug}(/page/{$page})',
 				'handler' => 'UserThemeHandler',
 				'action' => 'display_entries_by_category',
 				'priority' => 5,
-				'description' => 'Return posts matching specified category.',
+				'description' => 'Return posts matching specified category.'
+			),
+			array(
+				'name' => 'display_feed_by_category',
+				'parse_regex' => '%^' . self::URL_BASE . '/(?P<category_slug>.*?)/atom(?:/page/(?P<page>\d+))?/?$%i',
+				'build_str' => self::URL_BASE . '/{$category_slug}/atom(/page/{$page})',
+				'handler' => 'UserThemeHandler',
+				'action' => 'display_feed_by_category',
+				'priority' => 4,
+				'description' => 'Return atom feed for specified category.'
+			),
 		);
 
-		$rules[] = $rule;
+		$rules = array_merge($category_rules, $rules);
 		return $rules;
+	}
+	
+	public function filter_atom_get_collection_alternate_rules($alternate_rules)
+	{
+		$alternate_rules['display_feed_by_category'] = 'display_feed_by_category';
+		return $alternate_rules;
 	}
 
 	/**
@@ -292,9 +317,7 @@ class SimpleCategories extends Plugin
 		if( isset( $vars['category_slug'] ) ) {
 			$labels = explode( '/', $vars['category_slug'] );
 			$level = count( $labels ) - 1;
-			$term = $this->get_term( $labels, $level );
-
-//			$term = $this->vocabulary->get_term( $vars['category_slug'] );
+			$term = $this->get_term_from_label_array( $labels, $level );
 			if ( $term instanceof Term ) {
 				$terms = (array)$term->descendants();
 				array_push( $terms, $term );
@@ -304,28 +327,102 @@ class SimpleCategories extends Plugin
 		return $filters;
 	}
 
+	public function filter_theme_act_display_feed_by_category($handled, $theme) {
+		$handler_vars = Controller::get_handler_vars();
+		if (isset($handler_vars['category_slug'])) {
+			$atom = new AtomHandler();
+			$atom->get_collection(array(
+				'content_type' => Post::type('entry'),
+				'vocabulary' => array('categories:term' => $handler_vars['category_slug']),
+				'status' => Post::status('published')
+			));			
+		}
+		else {
+			header( 'HTTP/1.1 404 Not Found', true, 404 );
+			die( 'Posts could not be found' );
+		}
+	}
+	
 	/**
 	 * function filter_theme_act_display_entries_by_category
 	 * Helper function: Display the posts for a category. Probably should be more generic eventually.
-	 * Does not appear to work currently.
 	 */
 	public function filter_theme_act_display_entries_by_category( $handled, $theme ) {
+		$fallback = array();
+		$vars = Controller::get_handler_vars();
+		if (isset($vars['category_slug'])) {
+			$category = Categories::get($vars['category_slug']);
+			$template_names = array();
+			array_push($template_names, str_replace('/', '.', $category->slug));
+			$parent = $category->parent();
+			do {
+				if ($parent instanceof Category) {
+					$parent_template = str_replace('/', '.', $parent->slug);
+					// Add parent template name + .child
+					array_push($template_names, $parent_template . '.child');
+					// Add parent template name
+					array_push($template_names, $parent_template);
+					$parent = $parent->parent();
+				}
+			} while ($parent instanceof Category);
+		}
+		foreach ($template_names as $template_name) {
+			array_push($fallback, 'category.' . $template_name);
+		}
+		array_push($fallback, 'category');
+		array_push($fallback, 'multiple');
+		
 		$paramarray = array();
-		$paramarray[ 'fallback' ] = array(
-			'category.{$category}',
-			'category',
-			'multiple',
-		);
-
-		// Makes sure home displays only entries ... maybe not necessary. Probably not, in fact.
-		$default_filters = array(
- 			'content_type' => Post::type( 'entry' ),
-		);
-
-		$paramarray[ 'user_filters' ] = $default_filters;
+		$paramarray[ 'fallback' ] = $fallback;
+		$paramarray[ 'user_filters' ] = array();
 
 		$theme->act_display( $paramarray );
 		return true;
+	}
+	
+	public static function get_post_category_urls($post) {
+		$urls = array();
+		foreach ($post->categories as $category) {
+			$slug = $category->slug;
+			$urls[$slug] = URL::get('display_entries_by_category', array('category_slug' => $slug));
+		}
+		return $urls;
+	}
+	
+	public static function get($category_slug) {
+		return self::get_term($category_slug, 'Category');
+	}
+
+	public static function get_term($category_slug, $term_class = 'Term')
+	{
+		$labels = (array)explode( '/', $category_slug );
+		$level = count( $labels ) - 1;
+		$cat_obj = new Categories();
+		return $cat_obj->get_term_from_label_array($labels, $level, $term_class);
+	}
+	
+	protected function get_term_from_label_array( $labels, $level, $term_class = 'Term' )
+	{
+		$root_term = false;
+		$root = $labels[0];
+		$roots = $this->vocabulary->get_root_terms($term_class);
+		foreach( $roots as $term ) {
+			if ( $root == $term->term ) {
+				$root_term = $term;
+				break;
+			}
+		}
+		for( $i = 1; $i <= $level; $i++ ) {
+			$term = $labels[$i];
+			$roots = $root_term->children();
+			foreach( $roots as $cur ) {
+				if ( $cur->term == $term ) {
+					$root_term = $cur;
+					break;
+				}
+			}
+		}
+		return $root_term;
 	}
 
 	/**
@@ -335,16 +432,10 @@ class SimpleCategories extends Plugin
 	 */
 	private function get_categories( $post )
 	{
-		$categories = array();
-		$result = $this->vocabulary->get_object_terms( 'post', $post->id );
-		if( $result ) {
-			foreach( $result as $t ) {
-				$categories[ $t->term ] = $t->term_display;
-			}
-		}
-		return $categories;
+		$result = $this->vocabulary->get_object_terms( 'post', $post->id, 'Category' );
+		return $result;
 	}
-
+	
 	/**
 	 * function filter_post_get
 	 * Allow post->categories
@@ -355,16 +446,23 @@ class SimpleCategories extends Plugin
 		if( $name != 'categories' ) {
 			return $out;
 		}
-		$categories = array();
-		$result = $this->vocabulary->get_object_terms( 'post', $post->id );
-		if( $result ) {
-			foreach( $result as $t ) {
-				$categories[$t->term] = $t->term_display;
-			}
-		}
-		return $categories;
+		return $this->get_categories($post);
 	}
-
+	
+	/**
+	 * function is_category_type
+	 * Should the given content type be able to be categorized?
+	 * @param string $content_type the content type to check
+	 * @return boolean Whether or not the given content type should be categorized
+	 */
+	private static function is_category_type($content_type) {
+		foreach (self::$content_types as $type) {
+			if ($content_type == Post::type ($type))
+				return true;
+		}
+		return false;
+	}
+	
 	/**
 	 * function delete_category
 	 * Deletes an existing category and all relations to it.
@@ -393,10 +491,10 @@ class SimpleCategories extends Plugin
 	 *
 	 * Adapted from Tags::rename()
 	 *
-	 * @param mixed tag The category text, slug or id to be renamed
+	 * @param mixed category The category text, slug or id to be renamed
 	 * @param mixed master The category to which it should be renamed, or the slug, text or id of it
 	 **/
-	public static function rename( $master, $category, $object_type = 'post' )
+	public static function rename($category, $master, $object_type = 'post' )
 	{
 		$vocabulary = Vocabulary::get( self::$vocabulary );
 		$type_id = Vocabulary::object_type_id( $object_type );
@@ -450,33 +548,6 @@ class SimpleCategories extends Plugin
 				Session::notice( _t( 'Cannot merge %1$s into %2$s, since %2$s is a descendant of %1$s', array( $term, $master, ), 'shelves' ) );
 			}
 		}
-	}
-
-	protected function get_term( $labels, $level )
-	{
-		$root_term = false;
-		$root = $labels[0];
-		$roots = $this->vocabulary->get_root_terms();
-		foreach( $roots as $term ) {
-			if ( $root == $term->term ) {
-				$root_term = $term;
-				break;
-			}
-		}
-
-
-		for( $i = 1; $i <= $level; $i++ ) {
-			$term = $labels[$i];
-			$roots = $root_term->children( $root_term );
-			foreach( $roots as $cur ) {
-				if ( $cur->term == $term ) {
-					$root_term = $cur;
-					break;
-				}
-			}
-		}
-		return $root_term;
-
 	}
 
 	public function filter_posts_search_to_get( $arguments, $flag, $value, $match, $search_string )
