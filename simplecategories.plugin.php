@@ -6,10 +6,8 @@ class SimpleCategories extends Plugin
 {
 	const URL_BASE = 'category';
 	private static $vocabulary = 'categories';
-	private static $content_types = array('entry', 'photo');
 
 	protected $_vocabulary;
-
 
 	public function  __get( $name )
 	{
@@ -456,6 +454,7 @@ class SimpleCategories extends Plugin
 	 * @return boolean Whether or not the given content type should be categorized
 	 */
 	private static function is_category_type($content_type) {
+		$content_types = Options::get( 'simplecategories__content_types', array('entry'));
 		foreach (self::$content_types as $type) {
 			if ($content_type == Post::type ($type))
 				return true;
@@ -557,6 +556,29 @@ class SimpleCategories extends Plugin
 		}
 		return $arguments;
 	}
+	
+	
+	/** Plugin configuration **/
+	
+	public function configure()
+	{
+		$ui = new FormUI( strtolower( get_class( $this ) ) );
+		$content_types = $ui->append( 'text', 'content_types', 'simplecategories__content_types', 'Content types to categorize, comma-separated:');
+		$ui->on_success( array( $this, 'updated_config' ) );
+		$ui->append( 'submit', 'save', _t( 'Save' ) );
+		return $ui;
+	}
+
+	public function updated_config( FormUI $ui )
+	{
+		$content_types = array_map('trim', explode(',', $ui->content_types->value ));
+		$content_types = array_unique( $content_types );
+		$_POST[$ui->content_types->field] =  implode( ", ", $content_types );
+
+		Session::notice( _t( 'Options saved.' , get_class( $this ) ) );
+		$ui->save();
+	}
+
 
 }
 
