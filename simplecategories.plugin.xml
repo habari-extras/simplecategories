@@ -2,12 +2,10 @@
 <pluggable type="plugin">
 	<name>Simple Categories</name>
 	<license url="http://www.apache.org/licenses/LICENSE-2.0.html">Apache Software License 2.0</license>
-	<url>http://habariproject.org/</url>
+	<url>https://github.com/habari-extras/simplecategories</url>
 	<author url="http://habariproject.org/">The Habari Community</author>
-	<version>0</version>
-	<description><![CDATA[Rudimentary Categories for entries. THIS PLUGIN DOES NOT WORK YET.]]></description>
+	<version>0.1</version>
+	<description><![CDATA[Rudimentary Categories for entries.]]></description>
 	<copyright>2009</copyright>
 	<guid>379220dc-b464-4ea6-92aa-9086a521db2c</guid>
-
 </pluggable>
- 
