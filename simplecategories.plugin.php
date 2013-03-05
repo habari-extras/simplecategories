@@ -14,17 +14,12 @@ class SimpleCategories extends Plugin
 		switch ( $name ) {
 			case 'vocabulary':
 				if ( !isset( $this->_vocabulary ) ) {
-					$this->_vocabulary = self::get_vocabulary();
+					$this->_vocabulary = Vocabulary::get( self::$vocabulary );
 				}
 				return $this->_vocabulary;
 		}
 	}
-	
-	public static function get_vocabulary()
-	{
-		return Vocabulary::get( self::$vocabulary );
-	}
-	
+
 	/**
 	 * Add the category vocabulary and create the admin token
 	 *
